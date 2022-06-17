@@ -74,31 +74,15 @@ class DallE(commands.Cog):
         form = []
         payload = {"embeds": [e.to_dict() for e in embeds]}
         form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
-        if len(file_images) == 1:
-            file = file_images[0]
+        for index, file in enumerate(file_images):
             form.append(
                 {
-                    "name": "file",
+                    "name": f"file{index}",
                     "value": file.fp,
                     "filename": file.filename,
                     "content_type": "application/octet-stream",
                 }
             )
-        else:
-            for index, file in enumerate(file_images):
-                form.append(
-                    {
-                        "name": f"file{index}",
-                        "value": file.fp,
-                        "filename": file.filename,
-                        "content_type": "application/octet-stream",
-                    }
-                )
-
-        # try:
-        #     await status_msg.delete()
-        # except discord.NotFound:
-        #     pass
 
         r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
         await ctx.guild._state.http.request(r, form=form, files=file_images)
