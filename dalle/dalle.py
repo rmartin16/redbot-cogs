@@ -70,7 +70,7 @@ class DallE(commands.Cog):
             images = await self.generate_images(prompt, num_of_images)
 
         if not isinstance(images, list):
-            return await ctx.send(f"Something went wrong...:( [{images}]")
+            return await ctx.send(f"Something went wrong... :( [{images}]")
 
         file_images = [discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)]
         if len(file_images) == 0:
@@ -133,5 +133,7 @@ class DallE(commands.Cog):
                             for image in await response.json()
                         ]
                     return response.status
+        except aiohttp.ClientConnectionError as e:
+            return f"dalle backend is probably down [{e}]"
         except Exception as e:
             return repr(e)
