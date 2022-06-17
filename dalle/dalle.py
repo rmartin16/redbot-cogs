@@ -1,12 +1,14 @@
-import aiohttp
 import base64
+import io
+import os
+from typing import List, Union
+
+import aiohttp
 import discord
 from discord.http import Route
-import io
-import json
-from typing import List
-
 from redbot.core import commands
+
+DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
 
 
 class DallE(commands.Cog):
@@ -30,32 +32,50 @@ class DallE(commands.Cog):
         """
         embed_links = ctx.channel.permissions_for(ctx.guild.me).embed_links
         if not embed_links:
-            return await ctx.send("I need the `Embed Links` permission here before you can use this command.")
+            return await ctx.send(
+                "I need the `Embed Links` permission here before you can use this command."
+            )
 
-        status_msg = await ctx.send("Image generator starting up, please be patient. This will take a very long time.")
-        images = None
-        attempt = 0
+        # HACK: Support returning arbitrary number of images
+        num_of_images = prompt.split(" ")[-1:]
+        try:
+            num_of_images = min(int(num_of_images[0].strip()), 4)
+            prompt = prompt.rstrip(str(num_of_images)).strip()
+        except:
+            num_of_images = 1
+
+        # status_msg = await ctx.send(
+        #     "Image generator starting up, please be patient. This will take a very long time."
+        # )
+        # images = None
+        # attempt = 0
         async with ctx.typing():
-            while not images:
-                if attempt < 100:
-                    attempt += 1
-                    if attempt < 10:
-                        divisor = 2
-                    else:
-                        divisor = 5
-                    if attempt % divisor == 0:
-                        status = f"This will take a very long time. Once a response is acquired, this counter will pause while processing.\n[attempt `{attempt}/100`]"
-                        try:
-                            await status_msg.edit(content=status)
-                        except discord.NotFound:
-                            status_msg = await ctx.send(status)
+            # while not images:
+            #     if attempt < 100:
+            #         attempt += 1
+            #         if attempt < 10:
+            #             divisor = 2
+            #         else:
+            #             divisor = 5
+            #         if attempt % divisor == 0:
+            #             status = (
+            #                 "This will take a very long time. Once a response is acquired, this "
+            #                 f"counter will pause while processing.\n[attempt `{attempt}/100`]"
+            #             )
+            #             try:
+            #                 await status_msg.edit(content=status)
+            #             except discord.NotFound:
+            #                 status_msg = await ctx.send(status)
+            #
+            images = await self.generate_images(prompt, num_of_images)
 
-                images = await self.generate_images(prompt)
+        if not isinstance(images, list):
+            return await ctx.send(f"Something went wrong...:( [{images}]")
 
-        file_images = [discord.File(images[i], filename=f"{i}.png") for i in range(len(images))]
+        file_images = [discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)]
         if len(file_images) == 0:
             return await ctx.send(f"I didn't find anything for `{prompt}`.")
-        file_images = file_images[:4]
+        # file_images = file_images[:4]
 
         embed = discord.Embed(
             colour=await ctx.embed_color(),
@@ -66,7 +86,8 @@ class DallE(commands.Cog):
         for i, image in enumerate(file_images):
             em = embed.copy()
             em.set_image(url=f"attachment://{i}.png")
-            em.set_footer(text=f"Results for: {prompt}, requested by {ctx.author}\nView this output on a desktop client for best results.")
+            em.set_footer(
+                text=f"Results for: {prompt}, requested by {ctx.author}\nView this output on a desktop client for best results.")
             embeds.append(em)
 
         form = []
@@ -93,21 +114,19 @@ class DallE(commands.Cog):
                     }
                 )
 
-        try:
-            await status_msg.delete()
-        except discord.NotFound:
-            pass
+        # try:
+        #     await status_msg.delete()
+        # except discord.NotFound:
+        #     pass
 
         r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
         await ctx.guild._state.http.request(r, form=form, files=file_images)
 
     @staticmethod
-    async def generate_images(prompt: str) -> List[io.BytesIO]:
+    async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int]:
         async with aiohttp.ClientSession() as session:
-            async with session.post("https://bf.dallemini.ai/generate", json={"prompt": prompt}) as response:
+            dalle_request = {"text": prompt, "num_images": num_of_images}
+            async with session.post(DALLE_POST_ENDPOINT, json=dalle_request) as response:
                 if response.status == 200:
-                    response_data = await response.json()
-                    images = [io.BytesIO(base64.decodebytes(bytes(image, "utf-8"))) for image in response_data["images"]]
-                    return images
-                else:
-                    return None
+                    return [io.BytesIO(base64.decodebytes(bytes(image, "utf-8"))) for image in await response.json()]
+                return response.status
