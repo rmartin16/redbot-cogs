@@ -75,19 +75,18 @@ class DallE(commands.Cog):
         file_images = [discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)]
         if len(file_images) == 0:
             return await ctx.send(f"I didn't find anything for `{prompt}`.")
-        # file_images = file_images[:4]
 
-        embed = discord.Embed(
-            colour=await ctx.embed_color(),
-            title="Dall-E Mini results",
-            url="https://huggingface.co/spaces/dalle-mini/dalle-mini",
-        )
+        embed = discord.Embed(colour=await ctx.embed_color(), title="Dall-E Mini results")
         embeds = []
         for i, image in enumerate(file_images):
             em = embed.copy()
             em.set_image(url=f"attachment://{i}.png")
             em.set_footer(
-                text=f"Results for: {prompt}, requested by {ctx.author}\nView this output on a desktop client for best results.")
+                text=(
+                    f"Results for: {prompt}, requested by {ctx.author}\n"
+                    "View this output on a desktop client for best results."
+                )
+            )
             embeds.append(em)
 
         form = []
@@ -123,10 +122,16 @@ class DallE(commands.Cog):
         await ctx.guild._state.http.request(r, form=form, files=file_images)
 
     @staticmethod
-    async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int]:
-        async with aiohttp.ClientSession() as session:
-            dalle_request = {"text": prompt, "num_images": num_of_images}
-            async with session.post(DALLE_POST_ENDPOINT, json=dalle_request) as response:
-                if response.status == 200:
-                    return [io.BytesIO(base64.decodebytes(bytes(image, "utf-8"))) for image in await response.json()]
-                return response.status
+    async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int, str]:
+        try:
+            async with aiohttp.ClientSession() as session:
+                dalle_request = {"text": prompt, "num_images": num_of_images}
+                async with session.post(DALLE_POST_ENDPOINT, json=dalle_request) as response:
+                    if response.status == 200:
+                        return [
+                            io.BytesIO(base64.decodebytes(bytes(image, "utf-8")))
+                            for image in await response.json()
+                        ]
+                    return response.status
+        except Exception as e:
+            return repr(e)
