@@ -44,39 +44,21 @@ class DallE(commands.Cog):
         except:
             num_of_images = 1
 
-        # status_msg = await ctx.send(
-        #     "Image generator starting up, please be patient. This will take a very long time."
-        # )
-        # images = None
-        # attempt = 0
         async with ctx.typing():
-            # while not images:
-            #     if attempt < 100:
-            #         attempt += 1
-            #         if attempt < 10:
-            #             divisor = 2
-            #         else:
-            #             divisor = 5
-            #         if attempt % divisor == 0:
-            #             status = (
-            #                 "This will take a very long time. Once a response is acquired, this "
-            #                 f"counter will pause while processing.\n[attempt `{attempt}/100`]"
-            #             )
-            #             try:
-            #                 await status_msg.edit(content=status)
-            #             except discord.NotFound:
-            #                 status_msg = await ctx.send(status)
-            #
             images = await self.generate_images(prompt, num_of_images)
 
         if not isinstance(images, list):
             return await ctx.send(f"Something went wrong... :( [{images}]")
 
-        file_images = [discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)]
-        if len(file_images) == 0:
+        if not images:
             return await ctx.send(f"I didn't find anything for `{prompt}`.")
 
-        embed = discord.Embed(colour=await ctx.embed_color(), title="Dall-E Mini results")
+        file_images = [discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)]
+        embed = discord.Embed(
+            colour=await ctx.embed_color(),
+            title="Dall-E Mini results",
+            url="https://huggingface.co/spaces/dalle-mini/dalle-mini"
+        )
         embeds = []
         for i, image in enumerate(file_images):
             em = embed.copy()
