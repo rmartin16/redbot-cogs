@@ -52,7 +52,7 @@ class DallE(commands.Cog):
             num_of_words = 4
         WORDS = WORDS_FULL if word_list.upper() == "FULL" else WORDS_COMMON
         prompt = " ".join(choices(WORDS, k=num_of_words))
-        await ctx.send(f"Here's the best i can do with `{prompt}`...")
+        await ctx.send(f"Here's the best i can do with `{prompt}` from {word_list.lower()} word list...")
         await self.generate(ctx, prompt=f"{prompt} {num_of_images}")
 
     @commands.max_concurrency(3, commands.BucketType.default)
