@@ -37,6 +37,7 @@ class DallE(commands.Cog):
         except:
             num_of_words = 4
         prompt = [' '.join([WORDS[randint(0, len(WORDS))] for _ in range(num_of_words)]) for _ in range(10)][-1]
+        await ctx.send(f"Here's the best i can do with `{prompt}`...")
         await self.generate(ctx, prompt=prompt)
 
     @commands.max_concurrency(3, commands.BucketType.default)
