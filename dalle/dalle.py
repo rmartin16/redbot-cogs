@@ -14,7 +14,7 @@ DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
 try:
     with open("/data/words") as f:
         WORDS = list(set(f.read().splitlines()))
-    logging.getLogger().info(f"Read in {len(WORDS)} words in to random word list.")
+    logging.getLogger(__name__).info(f"Read in {len(WORDS)} words in to random word list.")
 except:
     WORDS = []
 
