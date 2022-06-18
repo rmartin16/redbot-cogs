@@ -11,8 +11,7 @@ from redbot.core import commands
 
 DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
 try:
-    # with open("/data/words") as f:
-    with open("/etc/dictionaries-common/words") as f:
+    with open("/data/words") as f:
         WORDS = f.read().splitlines()
 except:
     WORDS = ()
