@@ -1,6 +1,7 @@
 import base64
 import io
 import os
+from random import randint
 from typing import List, Union
 
 import aiohttp
@@ -9,6 +10,12 @@ from discord.http import Route
 from redbot.core import commands
 
 DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
+try:
+    # with open("/data/words") as f:
+    with open("/etc/dictionaries-common/words") as f:
+        WORDS = f.read().splitlines()
+except:
+    WORDS = ()
 
 
 class DallE(commands.Cog):
@@ -20,6 +27,18 @@ class DallE(commands.Cog):
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete."""
         return
+
+    @commands.command()
+    @commands.guild_only()
+    async def generate_random(self, ctx: commands.Context, *, num_of_words: str):
+        if not WORDS:
+            return await ctx.send("Failed to load word list...")
+        try:
+            num_of_words = int(num_of_words)
+        except:
+            num_of_words = 4
+        prompt = [' '.join([WORDS[randint(0, len(WORDS))] for _ in range(num_of_words)]) for _ in range(10)][-1]
+        await self.generate(ctx, prompt=prompt)
 
     @commands.max_concurrency(3, commands.BucketType.default)
     @commands.command()
