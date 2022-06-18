@@ -1,5 +1,6 @@
 import base64
 import io
+import logging
 import os
 from random import randint
 from typing import List, Union
@@ -13,7 +14,7 @@ DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
 try:
     with open("/data/words") as f:
         WORDS = set(f.read().splitlines())
-    print(f"Read in {len(WORDS)} words in to random word list.")
+    logging.getLogger().info(f"Read in {len(WORDS)} words in to random word list.")
 except:
     WORDS = set()
 
