@@ -11,8 +11,9 @@ from discord.http import Route
 from redbot.core import commands
 
 DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
+WORD_LIST = os.environ.get("DALLE_WORD_LIST", "/data/words_full")
 try:
-    with open("/data/words") as f:
+    with open(WORD_LIST) as f:
         WORDS = list(set(f.read().splitlines()))
     logging.getLogger(__name__).info(f"Read in {len(WORDS)} words in to random word list.")
 except:
