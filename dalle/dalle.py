@@ -29,7 +29,7 @@ class DallE(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def generate_random(self, ctx: commands.Context, *, num_of_words: str):
+    async def generate_random(self, ctx: commands.Context, *, num_of_words: str = "4"):
         if not WORDS:
             return await ctx.send("Failed to load word list...")
         try:
