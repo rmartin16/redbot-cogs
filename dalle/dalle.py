@@ -12,9 +12,10 @@ from redbot.core import commands
 DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
 try:
     with open("/data/words") as f:
-        WORDS = f.read().splitlines()
+        WORDS = set(f.read().splitlines())
+    print(f"Read in {len(WORDS)} words in to random word list.")
 except:
-    WORDS = ()
+    WORDS = set()
 
 
 class DallE(commands.Cog):
