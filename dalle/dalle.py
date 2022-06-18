@@ -40,7 +40,6 @@ class DallE(commands.Cog):
     async def generate_random(
             self,
             ctx: commands.Context,
-            *,
             num_of_words: str = "4",
             word_list: str = "FULL",
             num_of_images: str = "1",
