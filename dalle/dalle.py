@@ -2,7 +2,7 @@ import base64
 import io
 import logging
 import os
-from random import randint
+from random import choices
 from typing import List, Union
 
 import aiohttp
@@ -38,7 +38,7 @@ class DallE(commands.Cog):
             num_of_words = int(num_of_words)
         except:
             num_of_words = 4
-        prompt = [' '.join([WORDS[randint(0, len(WORDS))] for _ in range(num_of_words)]) for _ in range(10)][-1]
+        prompt = " ".join(choices(WORDS, k=num_of_words))
         await ctx.send(f"Here's the best i can do with `{prompt}`...")
         await self.generate(ctx, prompt=prompt)
 
