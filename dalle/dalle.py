@@ -11,13 +11,18 @@ from discord.http import Route
 from redbot.core import commands
 
 DALLE_POST_ENDPOINT = os.environ.get("DALLE_POST_ENDPOINT")
-WORD_LIST = os.environ.get("DALLE_WORD_LIST", "/data/words_full")
+FULL_WORD_LIST_FILE = os.environ.get("DALLE_FULL_WORD_LIST", "/data/words_full")
+COMMON_WORD_LIST_FILE = os.environ.get("DALLE_COMMOM_WORD_LIST", "/data/words_common")
 try:
-    with open(WORD_LIST) as f:
-        WORDS = list(set(f.read().splitlines()))
-    logging.getLogger(__name__).info(f"Read in {len(WORDS)} words in to random word list.")
+    with open(FULL_WORD_LIST_FILE) as f:
+        WORDS_FULL = list(set(f.read().splitlines()))
 except:
-    WORDS = []
+    WORDS_FULL = []
+try:
+    with open(COMMON_WORD_LIST_FILE) as f:
+        WORDS_COMMON = list(set(f.read().splitlines()))
+except:
+    WORDS_COMMON = []
 
 
 class DallE(commands.Cog):
@@ -32,16 +37,24 @@ class DallE(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def generate_random(self, ctx: commands.Context, *, num_of_words: str = "4"):
-        if not WORDS:
+    async def generate_random(
+            self,
+            ctx: commands.Context,
+            *,
+            num_of_words: str = "4",
+            word_list: str = "FULL",
+            num_of_images: str = "1",
+    ):
+        if not WORDS_FULL and not WORDS_COMMON:
             return await ctx.send("Failed to load word list...")
         try:
             num_of_words = int(num_of_words)
         except:
             num_of_words = 4
+        WORDS = WORDS_FULL if word_list.upper() == "FULL" else WORDS_COMMON
         prompt = " ".join(choices(WORDS, k=num_of_words))
         await ctx.send(f"Here's the best i can do with `{prompt}`...")
-        await self.generate(ctx, prompt=prompt)
+        await self.generate(ctx, prompt=f"{prompt} {num_of_images}")
 
     @commands.max_concurrency(3, commands.BucketType.default)
     @commands.command()
