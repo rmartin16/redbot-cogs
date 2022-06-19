@@ -1,8 +1,8 @@
 import base64
 import io
-import logging
 import os
 from random import choices
+from time import time
 from typing import List, Union
 
 import aiohttp
@@ -79,7 +79,9 @@ class DallE(commands.Cog):
             num_of_images = 1
 
         async with ctx.typing():
+            start = time()
             images = await self.generate_images(prompt, num_of_images)
+            gen_time = time() - start
 
         if not isinstance(images, list):
             return await ctx.send(f"Something went wrong... :( [{images}]")
@@ -100,7 +102,7 @@ class DallE(commands.Cog):
             em.set_footer(
                 text=(
                     f"Results for: {prompt}, requested by {ctx.author}\n"
-                    "View this output on a desktop client for best results."
+                    f"View this output on a desktop client for best results. ({round(gen_time, 1)}s)"
                 )
             )
             embeds.append(em)
