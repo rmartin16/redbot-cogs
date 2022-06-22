@@ -1,6 +1,7 @@
 import base64
 import io
 import os
+from itertools import islice
 from random import choices
 from time import time
 from typing import List, Union
@@ -23,6 +24,13 @@ try:
         WORDS_COMMON = list(set(f.read().splitlines()))
 except:
     WORDS_COMMON = []
+
+
+def chunks(data, chunk_size):
+    """Iteratively return chunks of a dictionary"""
+    it = iter(data)
+    for i in range(0, len(data), chunk_size):
+       yield {k:data[k] for k in islice(it, chunk_size)}
 
 
 class DallE(commands.Cog):
@@ -89,18 +97,15 @@ class DallE(commands.Cog):
         if not images:
             return await ctx.send(f"I didn't find anything for `{prompt}`.")
 
-        file_images = [discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)]
-
-        chunk_size = 4
-        chunked_file_images = [file_images[i:i + chunk_size] for i in range(0, len(file_images), chunk_size)]
-        for files_images_chunk in chunked_file_images:
+        file_images = {i: discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)}
+        for files_images_chunk in chunks(file_images, chunk_size=4):
             embed = discord.Embed(
                 colour=await ctx.embed_color(),
                 title="Dall-E Mini results",
                 url="https://huggingface.co/spaces/dalle-mini/dalle-mini"
             )
             embeds = []
-            for i, image in enumerate(files_images_chunk):
+            for i, image in files_images_chunk.items():
                 em = embed.copy()
                 em.set_image(url=f"attachment://{i}.png")
                 em.set_footer(
@@ -114,7 +119,7 @@ class DallE(commands.Cog):
             form = []
             payload = {"embeds": [e.to_dict() for e in embeds]}
             form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
-            for index, file in enumerate(files_images_chunk):
+            for index, file in files_images_chunk.items():
                 form.append(
                     {
                         "name": f"file{index}",
@@ -125,7 +130,7 @@ class DallE(commands.Cog):
                 )
 
             r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
-            await ctx.guild._state.http.request(r, form=form, files=files_images_chunk)
+            await ctx.guild._state.http.request(r, _create_and_send_embed=form, files=files_images_chunk)
 
     @staticmethod
     async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int, str]:
