@@ -17,12 +17,12 @@ COMMON_WORD_LIST_FILE = os.environ.get("DALLE_COMMOM_WORD_LIST", "/data/words_co
 try:
     with open(FULL_WORD_LIST_FILE) as f:
         WORDS_FULL = list(set(f.read().splitlines()))
-except:
+except Exception:
     WORDS_FULL = []
 try:
     with open(COMMON_WORD_LIST_FILE) as f:
         WORDS_COMMON = list(set(f.read().splitlines()))
-except:
+except Exception:
     WORDS_COMMON = []
 
 
@@ -30,7 +30,7 @@ def chunks(data, chunk_size):
     """Iteratively return chunks of a dictionary"""
     it = iter(data)
     for i in range(0, len(data), chunk_size):
-       yield {k:data[k] for k in islice(it, chunk_size)}
+        yield {k: data[k] for k in islice(it, chunk_size)}
 
 
 class DallE(commands.Cog):
@@ -56,7 +56,7 @@ class DallE(commands.Cog):
             return await ctx.send("Failed to load word list...")
         try:
             num_of_words = int(num_of_words)
-        except:
+        except ValueError:
             num_of_words = 4
         WORDS = WORDS_FULL if word_list.upper() == "FULL" else WORDS_COMMON
         prompt = " ".join(choices(WORDS, k=num_of_words))
@@ -83,7 +83,7 @@ class DallE(commands.Cog):
         try:
             num_of_images = min(int(num_of_images[0].strip()), 8)
             prompt = prompt.rstrip(str(num_of_images)).strip()
-        except:
+        except ValueError:
             num_of_images = 1
 
         async with ctx.typing():
@@ -97,7 +97,7 @@ class DallE(commands.Cog):
         if not images:
             return await ctx.send(f"I didn't find anything for `{prompt}`.")
 
-        file_images = {i: discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)}
+        file_images = {index: discord.File(image, filename=f"{index}.png") for index, image in enumerate(images)}
         for files_images_chunk in chunks(file_images, chunk_size=4):
             embed = discord.Embed(
                 colour=await ctx.embed_color(),
@@ -105,9 +105,9 @@ class DallE(commands.Cog):
                 url="https://huggingface.co/spaces/dalle-mini/dalle-mini"
             )
             embeds = []
-            for i, image in files_images_chunk.items():
+            for index, image in files_images_chunk.items():
                 em = embed.copy()
-                em.set_image(url=f"attachment://{i}.png")
+                em.set_image(url=f"attachment://{index}.png")
                 em.set_footer(
                     text=(
                         f"Results for: {prompt}, requested by {ctx.author}\n"
@@ -130,7 +130,7 @@ class DallE(commands.Cog):
                 )
 
             r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
-            await ctx.guild._state.http.request(r, _create_and_send_embed=form, files=files_images_chunk)
+            await ctx.guild._state.http.request(r, _create_and_send_embed=form, files=files_images_chunk.values())
 
     @staticmethod
     async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int, str]:
