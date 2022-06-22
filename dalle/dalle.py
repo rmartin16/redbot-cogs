@@ -130,7 +130,7 @@ class DallE(commands.Cog):
                 )
 
             r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
-            await ctx.guild._state.http.request(r, _create_and_send_embed=form, files=files_images_chunk.values())
+            await ctx.guild._state.http.request(r, form=form, files=files_images_chunk.values())
 
     @staticmethod
     async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int, str]:
