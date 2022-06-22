@@ -73,7 +73,7 @@ class DallE(commands.Cog):
         # HACK: Support returning arbitrary number of images
         num_of_images = prompt.split(" ")[-1:]
         try:
-            num_of_images = min(int(num_of_images[0].strip()), 4)
+            num_of_images = min(int(num_of_images[0].strip()), 8)
             prompt = prompt.rstrip(str(num_of_images)).strip()
         except:
             num_of_images = 1
@@ -90,38 +90,42 @@ class DallE(commands.Cog):
             return await ctx.send(f"I didn't find anything for `{prompt}`.")
 
         file_images = [discord.File(image, filename=f"{i}.png") for i, image in enumerate(images)]
-        embed = discord.Embed(
-            colour=await ctx.embed_color(),
-            title="Dall-E Mini results",
-            url="https://huggingface.co/spaces/dalle-mini/dalle-mini"
-        )
-        embeds = []
-        for i, image in enumerate(file_images):
-            em = embed.copy()
-            em.set_image(url=f"attachment://{i}.png")
-            em.set_footer(
-                text=(
-                    f"Results for: {prompt}, requested by {ctx.author}\n"
-                    f"View this output on a desktop client for best results. ({round(gen_time, 1)}s)"
+
+        chunk_size = 4
+        chunked_file_images = [file_images[i:i + chunk_size] for i in range(0, len(file_images), chunk_size)]
+        for files_images_chunk in chunked_file_images:
+            embed = discord.Embed(
+                colour=await ctx.embed_color(),
+                title="Dall-E Mini results",
+                url="https://huggingface.co/spaces/dalle-mini/dalle-mini"
+            )
+            embeds = []
+            for i, image in enumerate(files_images_chunk):
+                em = embed.copy()
+                em.set_image(url=f"attachment://{i}.png")
+                em.set_footer(
+                    text=(
+                        f"Results for: {prompt}, requested by {ctx.author}\n"
+                        f"View this output on a desktop client for best results. ({round(gen_time, 1)}s)"
+                    )
                 )
-            )
-            embeds.append(em)
+                embeds.append(em)
 
-        form = []
-        payload = {"embeds": [e.to_dict() for e in embeds]}
-        form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
-        for index, file in enumerate(file_images):
-            form.append(
-                {
-                    "name": f"file{index}",
-                    "value": file.fp,
-                    "filename": file.filename,
-                    "content_type": "application/octet-stream",
-                }
-            )
+            form = []
+            payload = {"embeds": [e.to_dict() for e in embeds]}
+            form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
+            for index, file in enumerate(files_images_chunk):
+                form.append(
+                    {
+                        "name": f"file{index}",
+                        "value": file.fp,
+                        "filename": file.filename,
+                        "content_type": "application/octet-stream",
+                    }
+                )
 
-        r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
-        await ctx.guild._state.http.request(r, form=form, files=file_images)
+            r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
+            await ctx.guild._state.http.request(r, form=form, files=files_images_chunk)
 
     @staticmethod
     async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int, str]:
