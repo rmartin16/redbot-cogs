@@ -232,7 +232,7 @@ class ProgressBar:
 
         :param total: integer representing 100% of progress
         """
-        self.bar_width = 50
+        self.bar_width = 30
         self.completed_char = "#"
         self.remaining_char = "."
 
@@ -248,4 +248,4 @@ class ProgressBar:
         bar_completed = self.completed_char * completed_count
         bar_remaining = self.remaining_char * (self.bar_width - completed_count)
         percent_done = int(completed_count * (100 / self.bar_width))
-        return f"{bar_completed}{bar_remaining} {percent_done}%"
+        return f"`{bar_completed}{bar_remaining} {percent_done}%`"
