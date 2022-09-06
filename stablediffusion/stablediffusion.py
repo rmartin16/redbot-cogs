@@ -155,7 +155,7 @@ class StableDiffusion(commands.Cog):
         payload.update(details)
         urls = []
         images = []
-        total_steps = num_of_images * payload["steps"]
+        total_steps = num_of_images * int(payload["steps"])
         current_step = 0
         msg_template = "Running... {}/" + str(total_steps)
         interim_msg = await ctx.send(msg_template.format(0))
