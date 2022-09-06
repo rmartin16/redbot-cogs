@@ -1,7 +1,7 @@
+import base64
 import io
 import json
 import os
-from asyncstdlib import map as amap
 from itertools import islice
 from random import choices
 from time import time
@@ -165,7 +165,8 @@ class StableDiffusion(commands.Cog):
                     if not response.status == 200:
                         return response.status
 
-                    async for resp in amap(json.loads, response.content):
+                    async for line in response.content:
+                        resp = json.loads(line)
                         event = resp.get("event", "").lower()
 
                         if event.lower().startswith("upscaling"):
