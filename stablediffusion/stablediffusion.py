@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import os
 from itertools import islice
 from random import choices
@@ -151,15 +152,16 @@ class StableDiffusion(commands.Cog):
                     "upscale_level": "",
                     "upscale_strength": "0.75"
                 }
+                images = []
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
+                    if not response.status == 200:
+                        return response.status
                     async for line in response.content:
-                        print(line)
-                    # if response.status == 200:
-                        # return [
-                        #     io.BytesIO(base64.decodebytes(bytes(image, "utf-8")))
-                        #     for image in await response.json()
-                        # ]
-                    return response.status
+                        resp = json.loads(line)
+                        if resp.get("url"):
+                            async with session.get(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:]) as image:
+                                images.append(io.BytesIO(await image.content.read()))
+                return images
         except aiohttp.ClientConnectionError as e:
             return f"Stable Diffusion backend is probably down [{e}]"
         except Exception as e:
