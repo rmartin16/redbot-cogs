@@ -137,7 +137,7 @@ class StableDiffusion(commands.Cog):
     async def generate_images(
             self, prompt: str, num_of_images: int = 1, ctx=None
     ) -> Union[Dict[str, Dict[str, Union[str, Union[Dict[str, str], io.BytesIO]]]], int, str]:
-        steps = 50
+        steps = 30
         prompt, details = get_details_from_prompt(prompt)
         payload = {
             "prompt": prompt,
