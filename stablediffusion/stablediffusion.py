@@ -150,7 +150,7 @@ class StableDiffusion(commands.Cog):
                 "fit": "on",
                 "gfpgan_strength": "0.8",
                 "upscale_level": "",
-                "upscale_strength": "0.75"
+                "upscale_strength": "1"
             }
             images = []
             total_steps = num_of_images * steps
