@@ -199,6 +199,7 @@ def get_details_from_prompt(prompt):
             if piece.startswith(f"{detail_name}:"):
                 detail_value = piece.split(":")[1]
                 prompt_details[detail_name] = detail_value
-            else:
-                new_prompt.append(piece)
+                break
+        else:
+            new_prompt.append(piece)
     return " ".join(new_prompt), prompt_details
