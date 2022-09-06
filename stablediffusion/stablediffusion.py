@@ -157,8 +157,8 @@ class StableDiffusion(commands.Cog):
         images = []
         total_steps = num_of_images * int(payload["steps"])
         current_step = 0
-        msg_template = "Running... {}/" + str(total_steps)
-        interim_msg = await ctx.send(msg_template.format(0))
+        progress_bar = ProgressBar(total=total_steps)
+        interim_msg = await ctx.send(progress_bar.update(current_step))
         await interim_msg.add_reaction("❌")
         self.channels[str(ctx.channel.id)] = {"msg_id": interim_msg.id}
         try:
@@ -178,7 +178,7 @@ class StableDiffusion(commands.Cog):
                         elif event == "step":
                             current_step += 1
                             if current_step == total_steps or current_step % 10 == 0:
-                                await interim_msg.edit(content=msg_template.format(current_step))
+                                await interim_msg.edit(content=progress_bar.update(current_step))
 
                 for url in urls:
                     async with session.get(url) as image:
@@ -221,3 +221,31 @@ def get_details_from_prompt(prompt):
         else:
             new_prompt.append(piece)
     return " ".join(new_prompt), prompt_details
+
+
+class ProgressBar:
+    def __init__(self, total: int):
+        """
+        Context manager to display a progress bar in the console.
+        Continuously call update() on the yielded object to redraw the progress bar.
+        The progress bar will reach 100% when completed == total.
+
+        :param total: integer representing 100% of progress
+        """
+        self.bar_width = 50
+        self.completed_char = "#"
+        self.remaining_char = "."
+
+        self.total = total
+
+    def update(self, completed: int):
+        """
+        Build the progress bar and return it.
+
+        :param completed: amount of the total to show as completed.
+        """
+        completed_count = int(self.bar_width * completed / self.total)
+        bar_completed = self.completed_char * completed_count
+        bar_remaining = self.remaining_char * (self.bar_width - completed_count)
+        percent_done = int(completed_count * (100 / self.bar_width))
+        return f"{bar_completed}{bar_remaining} {percent_done}%"
