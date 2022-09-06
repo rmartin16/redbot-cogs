@@ -159,7 +159,7 @@ class StableDiffusion(commands.Cog):
         current_step = 0
         msg_template = "Running... {}/" + str(total_steps)
         interim_msg = await ctx.send(msg_template.format(0))
-        await interim_msg.add_reaction(":x:")
+        await interim_msg.add_reaction("❌")
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
