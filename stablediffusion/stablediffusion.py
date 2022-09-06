@@ -167,9 +167,8 @@ class StableDiffusion(commands.Cog):
                     async for line in response.content:
                         resp = json.loads(line)
                         event = resp.get("event", "").lower()
-                        interim_msg.edit(content=event)
                         if event.lower().startswith("upscaling"):
-                            interim_msg.edit(content="Upscaling images...")
+                            await interim_msg.edit(content="Upscaling images...")
                         elif event == "result":
                             urls.append(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:])
                         elif event == "step":
