@@ -85,7 +85,7 @@ class StableDiffusion(commands.Cog):
 
         async with ctx.typing():
             start = time()
-            images = await self.generate_images(prompt, num_of_images)
+            images = await self.generate_images(prompt, num_of_images, ctx)
             gen_time = time() - start
 
         if not isinstance(images, list):
@@ -133,26 +133,31 @@ class StableDiffusion(commands.Cog):
                 await ctx.send(f"Discord is sucking... >:( {e}")
 
     @staticmethod
-    async def generate_images(prompt: str, num_of_images: int = 1) -> Union[List[io.BytesIO], int, str]:
+    async def generate_images(prompt: str, num_of_images: int = 1, ctx=None) -> Union[List[io.BytesIO], int, str]:
         try:
+            steps = 50
+            payload = {
+                "prompt": prompt,
+                "iterations": str(num_of_images),
+                "steps": str(steps),
+                "cfgscale": "7.5",
+                "sampler": "k_lms",
+                "width": "512",
+                "height": "512",
+                "seed": "-1",
+                "initimg": None,
+                "strength": "1",
+                "fit": "on",
+                "gfpgan_strength": "0.8",
+                "upscale_level": "",
+                "upscale_strength": "0.75"
+            }
+            images = []
+            total_steps = num_of_images * steps
+            current_step = 0
+            msg_template = "Running... {}/" + str(total_steps)
+            interim_msg = await ctx.send(msg_template.format(0))
             async with aiohttp.ClientSession() as session:
-                payload = {
-                    "prompt": prompt,
-                    "iterations": str(num_of_images),
-                    "steps": "50",
-                    "cfgscale": "7.5",
-                    "sampler": "k_lms",
-                    "width": "512",
-                    "height": "512",
-                    "seed": "-1",
-                    "initimg": None,
-                    "strength": "1",
-                    "fit": "on",
-                    "gfpgan_strength": "0.8",
-                    "upscale_level": "",
-                    "upscale_strength": "0.75"
-                }
-                images = []
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
                     if not response.status == 200:
                         return response.status
@@ -161,6 +166,10 @@ class StableDiffusion(commands.Cog):
                         if resp.get("url"):
                             async with session.get(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:]) as image:
                                 images.append(io.BytesIO(await image.content.read()))
+                        else:
+                            current_step += 1
+                            interim_msg.edit(msg_template.format(current_step))
+
                 return images
         except aiohttp.ClientConnectionError as e:
             return f"Stable Diffusion backend is probably down [{e}]"
