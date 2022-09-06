@@ -2,7 +2,7 @@
     "author": ["rmartin16"],
     "install_msg": "Generate images from text with Stable Diffusion.",
     "short": "Generate images from text with Stable Diffusion.",
-    "description": "Generate images from text with Stable Diffusion.",
+    "description": "Generate images from text with Stable Diffusion.\nsamplers: k_lms, ddim, k_euler_a, k_dpm_2_a, k_euler, k_euler_a",
     "tags": ["stablediffusion"],
     "permissions": ["embed_links"],
     "end_user_data_statement": "This cog does not persistently store data or metadata about users."
