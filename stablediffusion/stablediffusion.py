@@ -134,30 +134,32 @@ class StableDiffusion(commands.Cog):
 
     @staticmethod
     async def generate_images(prompt: str, num_of_images: int = 1, ctx=None) -> Union[List[io.BytesIO], int, str]:
+        steps = 50
+        prompt, details = get_details_from_prompt(prompt)
+        payload = {
+            "prompt": prompt,
+            "iterations": str(num_of_images),
+            "steps": str(steps),
+            "cfgscale": "7.5",
+            "sampler": "k_lms",
+            "width": "512",
+            "height": "512",
+            "seed": "-1",
+            "initimg": None,
+            "strength": "1",
+            "fit": "on",
+            "gfpgan_strength": "0.8",
+            "upscale_level": "2",
+            "upscale_strength": ".75"
+        }
+        payload.update(details)
+        urls = []
+        images = []
+        total_steps = num_of_images * steps
+        current_step = 0
+        msg_template = "Running... {}/" + str(total_steps)
+        interim_msg = await ctx.send(msg_template.format(0))
         try:
-            steps = 50
-            payload = {
-                "prompt": prompt,
-                "iterations": str(num_of_images),
-                "steps": str(steps),
-                "cfgscale": "7.5",
-                "sampler": "k_lms",
-                "width": "512",
-                "height": "512",
-                "seed": "-1",
-                "initimg": None,
-                "strength": "1",
-                "fit": "on",
-                "gfpgan_strength": "0.8",
-                "upscale_level": "2",
-                "upscale_strength": ".75"
-            }
-            urls = []
-            images = []
-            total_steps = num_of_images * steps
-            current_step = 0
-            msg_template = "Running... {}/" + str(total_steps)
-            interim_msg = await ctx.send(msg_template.format(0))
             async with aiohttp.ClientSession() as session:
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
                     if not response.status == 200:
@@ -175,9 +177,28 @@ class StableDiffusion(commands.Cog):
                     async with session.get(url) as image:
                         images.append(io.BytesIO(await image.content.read()))
 
-                await interim_msg.delete()
-                return images
         except aiohttp.ClientConnectionError as e:
             return f"Stable Diffusion backend is probably down [{e}]"
         except Exception as e:
             return repr(e)
+        else:
+            return images
+        finally:
+            await interim_msg.delete()
+
+
+def get_details_from_prompt(prompt):
+    new_prompt = []
+    prompt_details = {}
+    detail_list = [
+        'prompt', 'iterations', 'steps', 'cfgscale', 'sampler', 'width', 'height', 'seed', 'initimg',
+        'strength', 'fit', 'gfpgan_strength', 'upscale_level', 'upscale_strength'
+    ]
+    for piece in prompt.split(" "):
+        for detail_name in detail_list:
+            if piece.startswith(f"{detail_name}:"):
+                detail_value = piece.split(":")[1]
+                prompt_details[detail_name] = detail_value
+            else:
+                new_prompt.append(piece)
+    return " ".join(new_prompt), prompt_details
