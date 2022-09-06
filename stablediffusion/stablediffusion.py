@@ -93,7 +93,8 @@ class StableDiffusion(commands.Cog):
             return await ctx.send(f"Something went wrong... :( [{images}]")
 
         if not images:
-            return await ctx.send(f"I didn't find anything for `{prompt}`.")
+            return
+            # return await ctx.send(f"I didn't find anything for `{prompt}`.")
 
         file_images = {index: discord.File(image, filename=f"{index}.png") for index, image in enumerate(images)}
         for files_images_chunk in chunks(file_images, chunk_size=4):
