@@ -168,7 +168,7 @@ class StableDiffusion(commands.Cog):
                                 images.append(io.BytesIO(await image.content.read()))
                         else:
                             current_step += 1
-                            interim_msg.edit(msg_template.format(current_step))
+                            await interim_msg.edit(msg_template.format(current_step))
 
                 return images
         except aiohttp.ClientConnectionError as e:
