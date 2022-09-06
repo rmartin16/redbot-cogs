@@ -158,7 +158,7 @@ class StableDiffusion(commands.Cog):
         images = {}
         total_steps = num_of_images * int(payload["steps"])
         current_step = 0
-        step_update = 5
+        step_update = 8
         progress_bar = ProgressBar(total=total_steps)
         interim_msg = await ctx.send(progress_bar.update(current_step))
         await interim_msg.add_reaction("❌")
