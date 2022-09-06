@@ -64,7 +64,7 @@ class StableDiffusion(commands.Cog):
     #     await ctx.send(f"Here's the best i can do with `{prompt}` from {word_list.lower()} word list...")
     #     await self.generate(ctx, prompt=f"{prompt} {num_of_images}")
 
-    @commands.max_concurrency(3, commands.BucketType.default)
+    @commands.max_concurrency(1, commands.BucketType.default)
     @commands.command(name="stablediffusion")
     @commands.guild_only()
     async def generate(self, ctx: commands.Context, *, prompt: str):
@@ -150,7 +150,7 @@ class StableDiffusion(commands.Cog):
             "fit": "on",
             "gfpgan_strength": "0.8",
             "upscale_level": "2",
-            "upscale_strength": ".75"
+            "upscale_strength": "0.75",
         }
         payload.update(details)
         urls = []
@@ -159,6 +159,7 @@ class StableDiffusion(commands.Cog):
         current_step = 0
         msg_template = "Running... {}/" + str(total_steps)
         interim_msg = await ctx.send(msg_template.format(0))
+        interim_msg.add_reaction(":x:")
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
@@ -169,7 +170,7 @@ class StableDiffusion(commands.Cog):
                         resp = json.loads(line)
                         event = resp.get("event", "").lower()
 
-                        if event.lower().startswith("upscaling"):
+                        if event.startswith("upscaling"):
                             await interim_msg.edit(content="Upscaling images...")
                         elif event == "result":
                             urls.append(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:])
@@ -196,7 +197,7 @@ def get_details_from_prompt(prompt):
     new_prompt = []
     prompt_details = {}
     detail_list = [
-        'prompt', 'iterations', 'steps', 'cfgscale', 'sampler', 'width', 'height', 'seed', 'initimg',
+        'iterations', 'steps', 'cfgscale', 'sampler', 'width', 'height', 'seed', 'initimg',
         'strength', 'fit', 'gfpgan_strength', 'upscale_level', 'upscale_strength'
     ]
     for piece in prompt.split(" "):
