@@ -149,7 +149,7 @@ class StableDiffusion(commands.Cog):
                 "strength": "1",
                 "fit": "on",
                 "gfpgan_strength": "0.8",
-                "upscale_level": "",
+                "upscale_level": "2",
                 "upscale_strength": ".75"
             }
             urls = []
