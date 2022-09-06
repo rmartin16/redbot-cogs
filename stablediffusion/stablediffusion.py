@@ -1,11 +1,10 @@
-import base64
 import io
 import json
 import os
 from itertools import islice
 from random import choices
 from time import time
-from typing import List, Union
+from typing import Dict, List, Union
 
 import aiohttp
 import discord
@@ -45,25 +44,25 @@ class StableDiffusion(commands.Cog):
         """Nothing to delete."""
         return
 
-    # @commands.command()
-    # @commands.guild_only()
-    # async def generate_random(
-    #         self,
-    #         ctx: commands.Context,
-    #         num_of_words: str = "4",
-    #         word_list: str = "FULL",
-    #         num_of_images: str = "1",
-    # ):
-    #     if not WORDS_FULL and not WORDS_COMMON:
-    #         return await ctx.send("Failed to load word list...")
-    #     try:
-    #         num_of_words = int(num_of_words)
-    #     except ValueError:
-    #         num_of_words = 4
-    #     WORDS = WORDS_FULL if word_list.upper() == "FULL" else WORDS_COMMON
-    #     prompt = " ".join(choices(WORDS, k=num_of_words))
-    #     await ctx.send(f"Here's the best i can do with `{prompt}` from {word_list.lower()} word list...")
-    #     await self.generate(ctx, prompt=f"{prompt} {num_of_images}")
+    @commands.command(name="stablediffusionrandom")
+    @commands.guild_only()
+    async def generate_random(
+            self,
+            ctx: commands.Context,
+            num_of_words: str = "4",
+            word_list: str = "FULL",
+            num_of_images: str = "1",
+    ):
+        if not WORDS_FULL and not WORDS_COMMON:
+            return await ctx.send("Failed to load word list...")
+        try:
+            num_of_words = int(num_of_words)
+        except ValueError:
+            num_of_words = 4
+        WORDS = WORDS_FULL if word_list.upper() == "FULL" else WORDS_COMMON
+        prompt = " ".join(choices(WORDS, k=num_of_words))
+        await ctx.send(f"Here's the best i can do with `{prompt}` from {word_list.lower()} word list...")
+        await self.generate(ctx, prompt=f"{prompt} {num_of_images}")
 
     @commands.max_concurrency(1, commands.BucketType.default)
     @commands.command(name="stablediffusion")
