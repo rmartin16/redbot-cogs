@@ -64,7 +64,7 @@ class StableDiffusion(commands.Cog):
     #     await self.generate(ctx, prompt=f"{prompt} {num_of_images}")
 
     @commands.max_concurrency(3, commands.BucketType.default)
-    @commands.command(name="stable-diffusion")
+    @commands.command(name="stablediffusion")
     @commands.guild_only()
     async def generate(self, ctx: commands.Context, *, prompt: str):
         """Generate images through Stable Diffusion."""
