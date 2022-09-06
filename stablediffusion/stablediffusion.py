@@ -157,6 +157,7 @@ class StableDiffusion(commands.Cog):
         images = []
         total_steps = num_of_images * int(payload["steps"])
         current_step = 0
+        step_update = 5
         progress_bar = ProgressBar(total=total_steps)
         interim_msg = await ctx.send(progress_bar.update(current_step))
         await interim_msg.add_reaction("❌")
@@ -177,7 +178,7 @@ class StableDiffusion(commands.Cog):
                             urls.append(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:])
                         elif event == "step":
                             current_step += 1
-                            if current_step == total_steps or current_step % 10 == 0:
+                            if current_step == total_steps or current_step % step_update == 0:
                                 await interim_msg.edit(content=progress_bar.update(current_step))
 
                 for url in urls:
