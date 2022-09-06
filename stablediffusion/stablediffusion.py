@@ -102,14 +102,13 @@ class StableDiffusion(commands.Cog):
                 url="https://huggingface.co/spaces/stabilityai/stable-diffusion"
             )
             embeds = []
+            seeds = " ".join(f"{idx}: {img['seed']}" for idx, img in enumerate(files_images_chunk.values()))
             for index, image in files_images_chunk.items():
                 em = embed.copy()
                 em.set_image(url=f"attachment://{index}")
                 em.set_footer(
-                    text=(
-                        f"Results for: {prompt}, requested by {ctx.author} ({round(gen_time, 1)}s)\n"
-                        + " ".join(f"{idx}: {img['config']['seed']}" for idx, img in files_images_chunk.items())
-                    )
+                    text=f"Prompt: {image['config']['prompt']}, requested by {ctx.author} "
+                         f"({round(gen_time, 1)}s)\n{seeds}"
                 )
                 embeds.append(em)
 
@@ -191,6 +190,7 @@ class StableDiffusion(commands.Cog):
                         name = result["url"].split("/")[-1]
                         images[name] = {
                             "image": discord.File(io.BytesIO(await image.content.read()), filename=name),
+                            "seed": result["seed"],
                             "config": result["config"],
                         }
 
