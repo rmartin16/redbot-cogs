@@ -149,9 +149,10 @@ class StableDiffusion(commands.Cog):
                 "strength": "1",
                 "fit": "on",
                 "gfpgan_strength": "0.8",
-                "upscale_level": "2",
+                "upscale_level": "",
                 "upscale_strength": ".75"
             }
+            urls = []
             images = []
             total_steps = num_of_images * steps
             current_step = 0
@@ -164,12 +165,15 @@ class StableDiffusion(commands.Cog):
                     async for line in response.content:
                         resp = json.loads(line)
                         if resp.get("url"):
-                            async with session.get(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:]) as image:
-                                images.append(io.BytesIO(await image.content.read()))
+                            urls.append(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:])
                         else:
                             current_step += 1
                             if current_step == total_steps or current_step % 10 == 0:
                                 await interim_msg.edit(content=msg_template.format(current_step))
+
+                for url in urls:
+                    async with session.get(url) as image:
+                        images.append(io.BytesIO(await image.content.read()))
 
                 await interim_msg.delete()
                 return images
