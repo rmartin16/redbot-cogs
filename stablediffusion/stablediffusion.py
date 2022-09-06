@@ -167,6 +167,7 @@ class StableDiffusion(commands.Cog):
                     async for line in response.content:
                         resp = json.loads(line)
                         event = resp.get("event", "").lower()
+                        interim_msg.edit(content=event)
                         if event.lower().startswith("upscaling"):
                             interim_msg.edit(content="Upscaling images...")
                         elif event == "result":
