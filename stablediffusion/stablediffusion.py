@@ -64,7 +64,7 @@ class StableDiffusion(commands.Cog):
         await ctx.send(f"Here's the best i can do with `{prompt}` from {word_list.lower()} word list...")
         await self.generate(ctx, prompt=f"{prompt} {num_of_images}")
 
-    @commands.max_concurrency(1, commands.BucketType.default)
+    @commands.max_concurrency(2, commands.BucketType.default)
     @commands.command(name="stablediffusion")
     @commands.guild_only()
     async def generate(self, ctx: commands.Context, *, prompt: str):
