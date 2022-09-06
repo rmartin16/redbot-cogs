@@ -88,15 +88,14 @@ class StableDiffusion(commands.Cog):
             images = await self.generate_images(prompt, num_of_images, ctx)
             gen_time = time() - start
 
-        if not isinstance(images, list):
+        if not isinstance(images, dict):
             return await ctx.send(f"Something went wrong... :( [{images}]")
 
         if not images:
             return
             # return await ctx.send(f"I didn't find anything for `{prompt}`.")
 
-        file_images = {index: discord.File(image, filename=f"{index}.png") for index, image in enumerate(images)}
-        for files_images_chunk in chunks(file_images, chunk_size=4):
+        for files_images_chunk in chunks(images, chunk_size=4):
             embed = discord.Embed(
                 colour=await ctx.embed_color(),
                 title="Stable Diffusion results",
@@ -105,11 +104,11 @@ class StableDiffusion(commands.Cog):
             embeds = []
             for index, image in files_images_chunk.items():
                 em = embed.copy()
-                em.set_image(url=f"attachment://{index}.png")
+                em.set_image(url=f"attachment://{index}")
                 em.set_footer(
                     text=(
-                        f"Results for: {prompt}, requested by {ctx.author}\n"
-                        f"View this output on a desktop client for best results. ({round(gen_time, 1)}s)"
+                        f"Results for: {prompt}, requested by {ctx.author} ({round(gen_time, 1)}s)\n"
+                        + " ".join(f"{idx}: {img['config']['seed']}" for idx, img in files_images_chunk.items())
                     )
                 )
                 embeds.append(em)
@@ -133,7 +132,9 @@ class StableDiffusion(commands.Cog):
             except discord.errors.DiscordServerError as e:
                 await ctx.send(f"Discord is sucking... >:( {e}")
 
-    async def generate_images(self, prompt: str, num_of_images: int = 1, ctx=None) -> Union[List[io.BytesIO], int, str]:
+    async def generate_images(
+            self, prompt: str, num_of_images: int = 1, ctx=None
+    ) -> Union[Dict[str, Dict[str, Union[str, Union[Dict[str, str], io.BytesIO]]]], int, str]:
         steps = 50
         prompt, details = get_details_from_prompt(prompt)
         payload = {
@@ -153,8 +154,8 @@ class StableDiffusion(commands.Cog):
             "upscale_strength": "0.75",
         }
         payload.update(details)
-        urls = []
-        images = []
+        results = []
+        images = {}
         total_steps = num_of_images * int(payload["steps"])
         current_step = 0
         step_update = 5
@@ -175,15 +176,19 @@ class StableDiffusion(commands.Cog):
                         if event.startswith("upscaling"):
                             await interim_msg.edit(content="Upscaling images...")
                         elif event == "result":
-                            urls.append(STABLEDIFFUSION_POST_ENDPOINT + resp['url'][1:])
+                            results.append(resp)
                         elif event == "step":
                             current_step += 1
                             if current_step == total_steps or current_step % step_update == 0:
                                 await interim_msg.edit(content=progress_bar.update(current_step))
 
-                for url in urls:
-                    async with session.get(url) as image:
-                        images.append(io.BytesIO(await image.content.read()))
+                for result in results:
+                    async with session.get(STABLEDIFFUSION_POST_ENDPOINT + result["url"][1:]) as image:
+                        name = result["url"].split("/")[-1]
+                        images[name] = {
+                            "image": discord.File(io.BytesIO(await image.content.read()), filename=name),
+                            "config": result["config"],
+                        }
 
         except aiohttp.ClientConnectionError as e:
             return f"Stable Diffusion backend is probably down [{e}]"
