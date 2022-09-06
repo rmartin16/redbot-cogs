@@ -107,7 +107,7 @@ class StableDiffusion(commands.Cog):
                 em = embed.copy()
                 em.set_image(url=f"attachment://{index}")
                 em.set_footer(
-                    text=f"Prompt: {image['config']['prompt']}, from {ctx.author} in {round(gen_time, 1)}s\nSeeds:\n{seeds}"
+                    text=f"Prompt> `{image['config']['prompt']}` from {ctx.author} in {round(gen_time, 1)}s\nSeeds> {seeds}"
                 )
                 embeds.append(em)
 
