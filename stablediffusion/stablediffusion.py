@@ -39,6 +39,7 @@ class StableDiffusion(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.channels = {}
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete."""
@@ -132,8 +133,7 @@ class StableDiffusion(commands.Cog):
             except discord.errors.DiscordServerError as e:
                 await ctx.send(f"Discord is sucking... >:( {e}")
 
-    @staticmethod
-    async def generate_images(prompt: str, num_of_images: int = 1, ctx=None) -> Union[List[io.BytesIO], int, str]:
+    async def generate_images(self, prompt: str, num_of_images: int = 1, ctx=None) -> Union[List[io.BytesIO], int, str]:
         steps = 50
         prompt, details = get_details_from_prompt(prompt)
         payload = {
@@ -160,6 +160,7 @@ class StableDiffusion(commands.Cog):
         msg_template = "Running... {}/" + str(total_steps)
         interim_msg = await ctx.send(msg_template.format(0))
         await interim_msg.add_reaction("❌")
+        self.channels[str(ctx.channel.id)] = {"msg_id": interim_msg.id}
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
@@ -191,6 +192,17 @@ class StableDiffusion(commands.Cog):
             return images
         finally:
             await interim_msg.delete()
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if str(reaction.message.channel.id) not in self.channels:
+            return
+        if self.channels[str(reaction.message.channel.id)]["msg_id"] != reaction.message.id:
+            return
+        if user.id == self.bot.user.id:
+            return
+        async with aiohttp.ClientSession() as session:
+            await session.get(f"{STABLEDIFFUSION_POST_ENDPOINT}/cancel")
 
 
 def get_details_from_prompt(prompt):
