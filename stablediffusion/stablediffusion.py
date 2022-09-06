@@ -128,7 +128,11 @@ class StableDiffusion(commands.Cog):
 
             r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
             try:
-                await ctx.guild._state.http.request(r, form=form, files=files_images_chunk.values())
+                await ctx.guild._state.http.request(
+                    r,
+                    form=form,
+                    files=(f["image"] for f in files_images_chunk.values())
+                )
             except discord.errors.DiscordServerError as e:
                 await ctx.send(f"Discord is sucking... >:( {e}")
 
