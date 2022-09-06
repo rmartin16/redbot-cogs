@@ -1,7 +1,7 @@
-import base64
 import io
 import json
 import os
+from asyncstdlib import map as amap
 from itertools import islice
 from random import choices
 from time import time
@@ -164,9 +164,10 @@ class StableDiffusion(commands.Cog):
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
                     if not response.status == 200:
                         return response.status
-                    async for line in response.content:
-                        resp = json.loads(line)
+
+                    async for resp in amap(json.loads, response.content):
                         event = resp.get("event", "").lower()
+
                         if event.lower().startswith("upscaling"):
                             await interim_msg.edit(content="Upscaling images...")
                         elif event == "result":
