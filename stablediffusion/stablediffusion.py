@@ -218,16 +218,15 @@ class StableDiffusion(commands.Cog):
 def get_details_from_prompt(prompt):
     new_prompt = []
     prompt_details = {}
-    detail_list = [
+    detail_list = {
         'iterations', 'steps', 'cfgscale', 'sampler', 'width', 'height', 'seed', 'initimg',
         'strength', 'fit', 'gfpgan_strength', 'upscale_level', 'upscale_strength'
-    ]
-    for piece in prompt.split(" "):
-        for detail_name in detail_list:
-            if piece.startswith(f"{detail_name}:"):
-                detail_value = piece.split(":")[1]
-                prompt_details[detail_name] = detail_value
-                break
+    }
+    for piece in prompt.strip().split(" "):
+        if ":" in piece:
+            detail_name = piece.split(":")[0]
+            if detail_name in detail_list:
+                prompt_details[detail_name] = piece.split(":")[1]
         else:
             new_prompt.append(piece)
     return " ".join(new_prompt), prompt_details
