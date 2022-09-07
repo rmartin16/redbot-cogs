@@ -81,18 +81,17 @@ class StatusMessage:
 
     async def add_cancel_reaction(self):
         """Add ❌ reaction to message so users can cancel image generation."""
-        await self.msg.add_reaction("❌")
         self.channels[str(self.ctx.channel.id)] = {"msg_id": self.msg.id}
+        await self.msg.add_reaction("❌")
 
     async def validate_cancel_reaction(self, reaction, user):
         """If someone clicks cancel reaction, return True."""
-        if str(reaction.message.channel.id) not in self.channels:
-            return False
-        if user.id == self.bot_user_id:
-            return False
-        if self.channels[str(reaction.message.channel.id)]["msg_id"] != reaction.message.id:
-            return False
-        if reaction.emoji != "❌":
+        if (
+                str(reaction.message.channel.id) in self.channels
+                and user.id == self.bot_user_id
+                and self.channels[str(reaction.message.channel.id)]["msg_id"] == reaction.message.id
+                and reaction.emoji == "❌"
+        ):
             return True
         return False
 
@@ -105,7 +104,6 @@ class StableDiffusion(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.channels = {}
         self.status_msg: StatusMessage = None
         self.ctx = None
 
