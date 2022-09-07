@@ -92,6 +92,7 @@ class StatusMessage:
                 and self.channels[str(self.ctx.channel.id)]["msg_id"] == reaction.message.id
                 and reaction.emoji == "❌"
         ):
+            self.channels = {}
             return True
         return False
 
