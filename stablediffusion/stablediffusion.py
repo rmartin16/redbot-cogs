@@ -163,9 +163,9 @@ class StableDiffusion(commands.Cog):
                 )
                 embeds = []
                 seeds = " ".join(f"{idx}: {img.seed}" for idx, img in enumerate(files_images_chunk.values()))
-                for index, image in files_images_chunk.items():
+                for name, image in files_images_chunk.items():
                     em = embed.copy()
-                    em.set_image(url=f"attachment://{index}")
+                    em.set_image(url=f"attachment://{name}")
                     em.set_footer(
                         text=f"{image.config['prompt']} by {ctx.author} in {round(gen_time, 1)}s\n{seeds}"
                     )
@@ -175,20 +175,19 @@ class StableDiffusion(commands.Cog):
                 payload = {"embeds": [e.to_dict() for e in embeds]}
                 form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
 
-                for index, image in files_images_chunk.items():
+                for name, image in files_images_chunk.items():
                     form.append(
                         {
-                            "name": index,
+                            "name": name,
                             "value": image.image.fp,
                             "filename": image.image.filename,
                             "content_type": "application/octet-stream",
                         }
                     )
 
-                r = Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id)
                 try:
                     await ctx.guild._state.http.request(
-                        r,
+                        Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id),
                         form=form,
                         files=(f.image for f in files_images_chunk.values())
                     )
