@@ -36,7 +36,7 @@ except Exception:
     WORDS_COMMON = []
 
 
-def chunks(data: Dict[T, U], chunk_size: int) -> Generator[Dict[T, U]]:
+def chunks(data: Dict[T, U], chunk_size: int) -> Generator[Dict[T, U], None, None]:
     """Iteratively return chunks of a dictionary"""
     it = iter(data)
     for i in range(0, len(data), chunk_size):
