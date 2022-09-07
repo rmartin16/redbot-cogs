@@ -144,60 +144,58 @@ class StableDiffusion(commands.Cog):
 
         self.ctx = ctx
         self.status_msg = StatusMessage(ctx=ctx, bot_user_id=self.bot.user.id)
-        await self.status_msg.create()
-        request_config = self.request_config(prompt)
 
         try:
             async with ctx.typing():
+                await self.status_msg.create()
+                request_config = self.request_config(prompt)
                 start = time()
                 images = await self.generate_images(request_config)
                 gen_time = time() - start
-
-            await self.status_msg.update(content="Uploading to discord...")
-
-            for files_images_chunk in chunks(images, chunk_size=4):
-                embed = discord.Embed(
-                    colour=await ctx.embed_color(),
-                    title="Stable Diffusion results",
-                    url="https://huggingface.co/spaces/stabilityai/stable-diffusion"
-                )
-                embeds = []
-                seeds = " ".join(f"{idx}: {img.seed}" for idx, img in enumerate(files_images_chunk.values()))
-                for name, image in files_images_chunk.items():
-                    em = embed.copy()
-                    em.set_image(url=f"attachment://{name}")
-                    em.set_footer(
-                        text=f"{image.config['prompt']} by {ctx.author} in {round(gen_time, 1)}s\n{seeds}"
-                    )
-                    embeds.append(em)
-
-                form = []
-                payload = {"embeds": [e.to_dict() for e in embeds]}
-                form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
-
-                for name, image in files_images_chunk.items():
-                    form.append(
-                        {
-                            "name": name,
-                            "value": image.image.fp,
-                            "filename": image.image.filename,
-                            "content_type": "application/octet-stream",
-                        }
-                    )
-
-                try:
-                    await ctx.guild._state.http.request(
-                        Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id),
-                        form=form,
-                        files=(f.image for f in files_images_chunk.values())
-                    )
-                except discord.errors.DiscordServerError as e:
-                    await ctx.send(f"Discord is sucking... >:( {e}")
-
+                await self.upload(images, request_config['prompt'], gen_time)
         except GenerationFailure as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
             await self.status_msg.msg.delete()
+
+    async def upload(self, images, prompt, gen_time):
+        """Send images to Discord."""
+        await self.status_msg.update(content="Uploading to discord...")
+        for files_images_chunk in chunks(images, chunk_size=4):
+            embed = discord.Embed(
+                colour=await self.ctx.embed_color(),
+                title="Stable Diffusion results",
+                url="https://huggingface.co/spaces/stabilityai/stable-diffusion"
+            )
+            seeds = " ".join(f"{idx}: {img.seed}" for idx, img in enumerate(files_images_chunk.values()))
+            footer = f"{prompt} by {self.ctx.author} in {round(gen_time, 1)}s\n{seeds}"
+            embeds = [
+                embed.copy().set_image(url=f"attachment://{name}").set_footer(text=footer)
+                for name, image in files_images_chunk.items()
+            ]
+
+            form = []
+            payload = {"embeds": [e.to_dict() for e in embeds]}
+            form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
+
+            for name, image in files_images_chunk.items():
+                form.append(
+                    {
+                        "name": name,
+                        "value": image.image.fp,
+                        "filename": image.image.filename,
+                        "content_type": "application/octet-stream",
+                    }
+                )
+
+            try:
+                await self.ctx.guild._state.http.request(
+                    Route("POST", "/channels/{channel_id}/messages", channel_id=self.ctx.channel.id),
+                    form=form,
+                    files=(f.image for f in files_images_chunk.values())
+                )
+            except discord.errors.DiscordServerError as e:
+                await self.ctx.send(f"Discord is sucking... >:( {e}")
 
     def request_config(self, prompt) -> Dict:
 
