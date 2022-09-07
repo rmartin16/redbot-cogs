@@ -89,12 +89,11 @@ class StableDiffusion(commands.Cog):
             images = await self.generate_images(prompt, num_of_images, ctx, interim_msg)
             gen_time = time() - start
 
-        if not isinstance(images, dict):
-            return await ctx.send(f"Something went wrong... :( [{images}]")
-
-        if not images:
+        if not isinstance(images, dict) or not images:
+            await interim_msg.update(content=f"Something went wrong... :( [{images}]")
             return
-            # return await ctx.send(f"I didn't find anything for `{prompt}`.")
+
+        await interim_msg.update("Uploading to discord...")
 
         for files_images_chunk in chunks(images, chunk_size=4):
             embed = discord.Embed(
@@ -135,6 +134,8 @@ class StableDiffusion(commands.Cog):
             except discord.errors.DiscordServerError as e:
                 await ctx.send(f"Discord is sucking... >:( {e}")
 
+            await interim_msg.delete()
+
     async def generate_images(
             self, prompt: str, num_of_images: int = 1, ctx=None, interim_msg=None,
     ) -> Union[Dict[str, Dict[str, Union[str, Union[Dict[str, str], io.BytesIO]]]], int, str]:
@@ -169,6 +170,7 @@ class StableDiffusion(commands.Cog):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=payload) as response:
+
                     if not response.status == 200:
                         return response.status
 
@@ -198,10 +200,8 @@ class StableDiffusion(commands.Cog):
             return f"Stable Diffusion backend is probably down [{e}]"
         except Exception as e:
             return repr(e)
-        else:
-            return images
-        finally:
-            await interim_msg.delete()
+
+        return images
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
