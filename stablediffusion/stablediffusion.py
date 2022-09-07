@@ -198,6 +198,7 @@ class StableDiffusion(commands.Cog):
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
             await self.status_msg.msg.delete()
+            self.channels = {}
 
     def request_config(self, prompt) -> Dict:
 
