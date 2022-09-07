@@ -93,7 +93,7 @@ class StableDiffusion(commands.Cog):
             await interim_msg.update(content=f"Something went wrong... :( [{images}]")
             return
 
-        await interim_msg.update("Uploading to discord...")
+        await interim_msg.edit("Uploading to discord...")
 
         for files_images_chunk in chunks(images, chunk_size=4):
             embed = discord.Embed(
