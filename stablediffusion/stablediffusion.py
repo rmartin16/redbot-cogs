@@ -74,6 +74,7 @@ class StableDiffusion(commands.Cog):
             return await ctx.send(
                 "I need the `Embed Links` permission here before you can use this command."
             )
+        interim_msg = await ctx.send("Generating images...")
 
         # HACK: Support returning arbitrary number of images
         num_of_images = prompt.split(" ")[-1:]
@@ -85,7 +86,7 @@ class StableDiffusion(commands.Cog):
 
         async with ctx.typing():
             start = time()
-            images = await self.generate_images(prompt, num_of_images, ctx)
+            images = await self.generate_images(prompt, num_of_images, ctx, interim_msg)
             gen_time = time() - start
 
         if not isinstance(images, dict):
@@ -135,7 +136,7 @@ class StableDiffusion(commands.Cog):
                 await ctx.send(f"Discord is sucking... >:( {e}")
 
     async def generate_images(
-            self, prompt: str, num_of_images: int = 1, ctx=None
+            self, prompt: str, num_of_images: int = 1, ctx=None, interim_msg=None,
     ) -> Union[Dict[str, Dict[str, Union[str, Union[Dict[str, str], io.BytesIO]]]], int, str]:
         steps = 30
         prompt, details = get_details_from_prompt(prompt)
@@ -162,7 +163,7 @@ class StableDiffusion(commands.Cog):
         current_step = 0
         step_update = 8
         progress_bar = ProgressBar(total=total_steps)
-        interim_msg = await ctx.send(progress_bar.update(current_step))
+        await interim_msg.update(content=progress_bar.update(current_step))
         await interim_msg.add_reaction("❌")
         self.channels[str(ctx.channel.id)] = {"msg_id": interim_msg.id}
         try:
