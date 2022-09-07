@@ -70,10 +70,12 @@ class StatusMessage:
     def __init__(self, ctx, bot_user_id):
         self.ctx = ctx
         self.msg = None
+        self.channels = {}
         self.bot_user_id = bot_user_id
 
     async def create(self, content="Generating images..."):
         self.msg = await self.ctx.send(content)
+        self.channels[str(self.ctx.channel.id)] = {"msg_id": self.msg.id}
 
     async def update(self, content):
         await self.msg.edit(content=content)
@@ -86,7 +88,8 @@ class StatusMessage:
         """If someone clicks cancel reaction, return True."""
         if (
                 user.id != self.bot_user_id
-                and self.msg.id == reaction.message.id
+                and str(reaction.message.channel.id) in self.channels
+                and self.channels[str(self.ctx.channel.id)]["msg_id"] == reaction.message.id
                 and reaction.emoji == "❌"
         ):
             return True
