@@ -71,7 +71,6 @@ class StatusMessage:
         self.ctx = ctx
         self.msg = None
         self.bot_user_id = bot_user_id
-        self.channels = {}
 
     async def create(self, content="Generating images..."):
         self.msg = await self.ctx.send(content)
@@ -81,15 +80,13 @@ class StatusMessage:
 
     async def add_cancel_reaction(self):
         """Add ❌ reaction to message so users can cancel image generation."""
-        self.channels[str(self.ctx.channel.id)] = {"msg_id": self.msg.id}
         await self.msg.add_reaction("❌")
 
     async def validate_cancel_reaction(self, reaction, user):
         """If someone clicks cancel reaction, return True."""
         if (
-                str(reaction.message.channel.id) in self.channels
-                and user.id == self.bot_user_id
-                and self.channels[str(reaction.message.channel.id)]["msg_id"] == reaction.message.id
+                user.id != self.bot_user_id
+                and self.msg.id == reaction.message.id
                 and reaction.emoji == "❌"
         ):
             return True
