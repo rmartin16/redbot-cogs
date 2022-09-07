@@ -92,6 +92,8 @@ class StatusMessage:
             return False
         if self.channels[str(reaction.message.channel.id)]["msg_id"] != reaction.message.id:
             return False
+        if reaction.emoji != "❌":
+            return False
         return True
 
 
