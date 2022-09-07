@@ -163,7 +163,7 @@ class StableDiffusion(commands.Cog):
         current_step = 0
         step_update = 8
         progress_bar = ProgressBar(total=total_steps)
-        await interim_msg.update(content=progress_bar.update(current_step))
+        await interim_msg.edit(content=progress_bar.update(current_step))
         await interim_msg.add_reaction("❌")
         self.channels[str(ctx.channel.id)] = {"msg_id": interim_msg.id}
         try:
