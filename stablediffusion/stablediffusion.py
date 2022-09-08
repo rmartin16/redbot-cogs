@@ -20,7 +20,6 @@ CONFIG_PROPERTIES = {
     'iterations', 'steps', 'cfgscale', 'sampler', 'width', 'height', 'seed', 'initimg',
     'strength', 'fit', 'gfpgan_strength', 'upscale_level', 'upscale_strength'
 }
-GENERATE_RESP_T = Union[Dict[str, Dict[str, Union[str, Union[Dict[str, str], io.BytesIO]]]], int, str]
 
 FULL_WORD_LIST_FILE = os.environ.get("STABLEDIFFUSION_FULL_WORD_LIST", "/data/words_full")
 COMMON_WORD_LIST_FILE = os.environ.get("STABLEDIFFUSION_COMMOM_WORD_LIST", "/data/words_common")
@@ -70,12 +69,10 @@ class StatusMessage:
     def __init__(self, ctx, bot_user_id):
         self.ctx = ctx
         self.msg = None
-        self.channels = {}
         self.bot_user_id = bot_user_id
 
     async def create(self, content="Generating images..."):
         self.msg = await self.ctx.send(content)
-        self.channels[str(self.ctx.channel.id)] = {"msg_id": self.msg.id}
 
     async def update(self, content):
         await self.msg.edit(content=content)
@@ -84,29 +81,19 @@ class StatusMessage:
         """Add ❌ reaction to message so users can cancel image generation."""
         await self.msg.add_reaction("❌")
 
-    async def validate_cancel_reaction(self, reaction, user):
-        """If someone clicks cancel reaction, return True."""
-        if (
-                user.id != self.bot_user_id
-                and str(reaction.message.channel.id) in self.channels
-                and self.channels[str(self.ctx.channel.id)]["msg_id"] == reaction.message.id
-                and reaction.emoji == "❌"
-        ):
-            self.channels = {}
-            return True
-        return False
 
-
-class GenerationFailure(Exception): pass
+class GenerationFailure(Exception):
+    """Image generation failed."""
 
 
 class StableDiffusion(commands.Cog):
-    """Stable Diffusion image generation"""
+    """Stable Diffusion image generation."""
 
     def __init__(self, bot):
         self.bot = bot
         self.status_msg: StatusMessage = None
         self.ctx = None
+        self.channels = {}
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete."""
@@ -251,6 +238,7 @@ class StableDiffusion(commands.Cog):
         progress_bar = ProgressBar(total=int(request_config["iterations"]) * int(request_config["steps"]))
         await self.status_msg.update(content=progress_bar.update(current_step))
         await self.status_msg.add_cancel_reaction()
+        self.channels[str(self.ctx.channel.id)] = {"msg_id": self.status_msg.msg.id}
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=request_config) as response:
@@ -290,6 +278,12 @@ class StableDiffusion(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
-        if self.status_msg.validate_cancel_reaction(reaction, user):
-            async with aiohttp.ClientSession() as session:
-                await session.get(f"{STABLEDIFFUSION_POST_ENDPOINT}/cancel")
+        if str(reaction.message.channel.id) not in self.channels:
+            return
+        if self.channels[str(reaction.message.channel.id)]["msg_id"] != reaction.message.id:
+            return
+        if user.id == self.bot.user.id:
+            return
+
+        async with aiohttp.ClientSession() as session:
+            await session.get(f"{STABLEDIFFUSION_POST_ENDPOINT}/cancel")
