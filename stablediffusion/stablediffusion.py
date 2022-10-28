@@ -144,7 +144,7 @@ class StableDiffusion(commands.Cog):
         except GenerationFailure as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
-            pass  #await self.status_msg.msg.delete()
+            await self.status_msg.msg.delete()
 
     async def upload(self, images, prompt, gen_time):
         """Send images to Discord."""
@@ -252,8 +252,7 @@ class StableDiffusion(commands.Cog):
                             await self.status_msg.update(content="Upscaling images...")
 
                         elif event == "result":
-                            await self.status_msg.update(content=f"getting image from {resp['url']}")
-                            async with session.get(STABLEDIFFUSION_POST_ENDPOINT + resp["url"][1:]) as image:
+                            async with session.get(STABLEDIFFUSION_POST_ENDPOINT + "/" + resp["url"]) as image:
                                 name = resp["url"].split("/")[-1]
                                 images[name] = Image(
                                     image=discord.File(io.BytesIO(await image.content.read()), name),
@@ -273,7 +272,7 @@ class StableDiffusion(commands.Cog):
         except aiohttp.ClientConnectionError as e:
             raise GenerationFailure(f"Stable Diffusion backend is probably down [{e}]")
         except Exception as e:
-            raise GenerationFailure(f"Unknown error: {e} {repr(e)}")
+            raise GenerationFailure(f"Unknown error: {repr(e)}")
 
         return images
 
