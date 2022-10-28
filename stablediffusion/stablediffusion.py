@@ -142,7 +142,7 @@ class StableDiffusion(commands.Cog):
                 images = await self.generate_images(request_config)
                 gen_time = time() - start
                 await self.upload(images, request_config['prompt'], gen_time)
-        except GenerationFailure as e:
+        except Exception as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
             await sleep(3)
