@@ -205,6 +205,7 @@ class StableDiffusion(commands.Cog):
             "gfpgan_strength": "0.8",
             "upscale_level": "2",
             "upscale_strength": "0.75",
+            "variation_amount": "0",
         }
         request_config.update(prompt_config)
 
