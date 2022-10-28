@@ -150,6 +150,7 @@ class StableDiffusion(commands.Cog):
         """Send images to Discord."""
         await self.status_msg.update(content="Uploading to discord...")
         for files_images_chunk in chunks(images, chunk_size=4):
+            print(f"{files_images_chunk}")
             embed = discord.Embed(
                 colour=await self.ctx.embed_color(),
                 title="Stable Diffusion results",
