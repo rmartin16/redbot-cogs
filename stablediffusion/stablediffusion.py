@@ -167,7 +167,6 @@ class StableDiffusion(commands.Cog):
             form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
 
             for name, image in files_images_chunk.items():
-                await self.ctx.send(f"adding {name} at {image.image.filename}")
                 form.append(
                     {
                         "name": name,
@@ -176,6 +175,9 @@ class StableDiffusion(commands.Cog):
                         "content_type": "application/octet-stream",
                     }
                 )
+
+                await self.ctx.send(f"adding {name}")
+                await self.ctx.send(file=image.image)
 
             try:
                 await self.ctx.guild._state.http.request(
