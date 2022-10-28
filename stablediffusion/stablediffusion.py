@@ -144,7 +144,7 @@ class StableDiffusion(commands.Cog):
         except GenerationFailure as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
-            pass  #await self.status_msg.msg.delete()
+            await self.status_msg.msg.delete()
 
     async def upload(self, images, prompt, gen_time):
         """Send images to Discord."""
