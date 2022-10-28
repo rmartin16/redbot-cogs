@@ -168,6 +168,7 @@ class StableDiffusion(commands.Cog):
             form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
 
             for name, image in files_images_chunk.items():
+                self.ctx.send(f"adding {name} at {image.image.filename}")
                 form.append(
                     {
                         "name": name,
