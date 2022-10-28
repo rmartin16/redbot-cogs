@@ -177,7 +177,7 @@ class StableDiffusion(commands.Cog):
                 )
 
                 await self.ctx.send(f"adding {name}")
-                await self.ctx.send(file=image.image)
+                # await self.ctx.send(file=image.image)
 
             try:
                 await self.ctx.guild._state.http.request(
