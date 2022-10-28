@@ -252,6 +252,7 @@ class StableDiffusion(commands.Cog):
                             await self.status_msg.update(content="Upscaling images...")
 
                         elif event == "result":
+                            await self.status_msg.update(content=f"getting image from {resp['url']}")
                             async with session.get(STABLEDIFFUSION_POST_ENDPOINT + resp["url"][1:]) as image:
                                 name = resp["url"].split("/")[-1]
                                 images[name] = Image(
