@@ -1,6 +1,7 @@
 import io
 import json
 import os
+from asyncio import sleep
 from itertools import islice
 from random import choices
 from time import time
@@ -144,6 +145,7 @@ class StableDiffusion(commands.Cog):
         except GenerationFailure as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
+            await sleep(3)
             await self.status_msg.msg.delete()
 
     async def upload(self, images, prompt, gen_time):
@@ -183,6 +185,7 @@ class StableDiffusion(commands.Cog):
                     files=(f.image for f in files_images_chunk.values())
                 )
             except discord.errors.DiscordServerError as e:
+                await as
                 await self.ctx.send(f"Discord is sucking... >:( {e}")
 
     def request_config(self, prompt) -> Dict:
