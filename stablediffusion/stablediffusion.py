@@ -200,7 +200,7 @@ class StableDiffusion(commands.Cog):
             "height": "512",
             "seed": "-1",
             "initimg": None,
-            "strength": "1",
+            "strength": "0.9",
             "fit": "on",
             "gfpgan_strength": "0.8",
             "upscale_level": "2",
