@@ -272,7 +272,7 @@ class StableDiffusion(commands.Cog):
         except aiohttp.ClientConnectionError as e:
             raise GenerationFailure(f"Stable Diffusion backend is probably down [{e}]")
         except Exception as e:
-            raise GenerationFailure(f"Unknown error: {repr(e)}")
+            raise GenerationFailure(f"Unknown error: {e} {repr(e)}")
 
         return images
 
