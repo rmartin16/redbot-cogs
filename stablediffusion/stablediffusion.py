@@ -144,13 +144,12 @@ class StableDiffusion(commands.Cog):
         except GenerationFailure as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
-            pass  #await self.status_msg.msg.delete()
+            await self.status_msg.msg.delete()
 
     async def upload(self, images, prompt, gen_time):
         """Send images to Discord."""
         await self.status_msg.update(content="Uploading to discord...")
         for files_images_chunk in chunks(images, chunk_size=4):
-            await self.status_msg.update(content=f"{files_images_chunk}")
             embed = discord.Embed(
                 colour=await self.ctx.embed_color(),
                 title="Stable Diffusion results",
