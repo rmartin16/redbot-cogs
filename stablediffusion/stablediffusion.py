@@ -1,11 +1,10 @@
 import io
 import json
 import os
-from asyncio import sleep
 from itertools import islice
 from random import choices
 from time import time
-from typing import Dict, Generator, Tuple, TypeVar, Union
+from typing import Dict, Generator, Tuple, TypeVar
 
 import aiohttp
 import discord
@@ -16,7 +15,7 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 STABLEDIFFUSION_POST_ENDPOINT = os.environ.get("STABLEDIFFUSION_POST_ENDPOINT")
-DEFAULT_REQUEST_STEPS = 30
+DEFAULT_REQUEST_STEPS = 50
 CONFIG_PROPERTIES = {
     'iterations', 'steps', 'cfg_scale', 'sampler_name', 'width', 'height', 'seed', 'initimg',
     'strength', 'fit', 'gfpgan_strength', 'upscale_level', 'upscale_strength'
@@ -134,18 +133,18 @@ class StableDiffusion(commands.Cog):
         self.ctx = ctx
         self.status_msg = StatusMessage(ctx=ctx, bot_user_id=self.bot.user.id)
 
-        try:
-            async with ctx.typing():
+        async with ctx.typing():
+            try:
                 await self.status_msg.create()
                 request_config = self.request_config(prompt)
                 start = time()
                 images = await self.generate_images(request_config)
                 gen_time = time() - start
                 await self.upload(images, request_config['prompt'], gen_time)
-        except Exception as e:
-            await self.ctx.send(f"Something went wrong... :( [{e}]")
-        finally:
-            await self.status_msg.msg.delete()
+            except Exception as e:
+                await self.ctx.send(f"Something went wrong... :( [{e}]")
+            finally:
+                await self.status_msg.msg.delete()
 
     async def upload(self, images, prompt, gen_time):
         """Send images to Discord."""
