@@ -145,7 +145,6 @@ class StableDiffusion(commands.Cog):
         except Exception as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
         finally:
-            await sleep(3)
             await self.status_msg.msg.delete()
 
     async def upload(self, images, prompt, gen_time):
@@ -216,11 +215,11 @@ class StableDiffusion(commands.Cog):
         # HACK: Support returning arbitrary number of images
         num_of_images = prompt.split(" ")[-1:]
         try:
-            num_of_images = min(int(num_of_images[0].strip()), 8)
-            prompt = prompt.rstrip(str(num_of_images)).strip()
+            num_of_images = int(num_of_images[0].strip())
+            prompt = prompt.strip().rstrip(str(num_of_images))
         except ValueError:
             num_of_images = 1
-        return prompt, num_of_images
+        return prompt, min(num_of_images, 8)
 
     def parse_config_from_prompt(self, prompt) -> Tuple[str, Dict]:
         new_prompt = []
