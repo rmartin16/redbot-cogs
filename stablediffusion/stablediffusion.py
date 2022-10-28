@@ -185,7 +185,6 @@ class StableDiffusion(commands.Cog):
                     files=(f.image for f in files_images_chunk.values())
                 )
             except discord.errors.DiscordServerError as e:
-                await as
                 await self.ctx.send(f"Discord is sucking... >:( {e}")
 
     def request_config(self, prompt) -> Dict:
