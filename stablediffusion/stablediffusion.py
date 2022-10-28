@@ -17,7 +17,7 @@ U = TypeVar("U")
 STABLEDIFFUSION_POST_ENDPOINT = os.environ.get("STABLEDIFFUSION_POST_ENDPOINT")
 DEFAULT_REQUEST_STEPS = 30
 CONFIG_PROPERTIES = {
-    'iterations', 'steps', 'cfgscale', 'sampler', 'width', 'height', 'seed', 'initimg',
+    'iterations', 'steps', 'cfg_scale', 'sampler', 'width', 'height', 'seed', 'initimg',
     'strength', 'fit', 'gfpgan_strength', 'upscale_level', 'upscale_strength'
 }
 
@@ -194,7 +194,7 @@ class StableDiffusion(commands.Cog):
             "prompt": prompt,
             "iterations": str(num_of_images),
             "steps": str(DEFAULT_REQUEST_STEPS),
-            "cfgscale": "7.5",
+            "cfg_scale": "7.5",
             "sampler": "k_lms",
             "width": "512",
             "height": "512",
