@@ -161,7 +161,7 @@ class StableDiffusion(commands.Cog):
             image = images[name]
             seeds = f"0: {image.seed}"
             footer = f"{prompt} by {self.ctx.author} in {round(gen_time, 1)}s\n{seeds}"
-            embed.set_image(url=f"attachment://{name}")
+            embed.set_image(url=f"attachment://{name}").set_footer(text=footer)
             await self.ctx.send(file=image.image, embed=embed)
 
         else:
