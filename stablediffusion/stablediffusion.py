@@ -207,6 +207,7 @@ class StableDiffusion(commands.Cog):
             "upscale_strength": "0.75",
             "variation_amount": "0",
             "with_variations": "",
+            "facetool_strength": "0.8",
         }
         request_config.update(prompt_config)
 
