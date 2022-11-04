@@ -247,6 +247,7 @@ class StableDiffusion(commands.Cog):
                 async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=request_config) as response:
                     response.raise_for_status()
 
+                    results = []
                     async for line in response.content:
                         resp = json.loads(line)
                         event = resp.get("event", "").lower()
@@ -255,18 +256,21 @@ class StableDiffusion(commands.Cog):
                             await self.status_msg.update(content="Upscaling images...")
 
                         elif event == "result":
-                            async with session.get(STABLEDIFFUSION_POST_ENDPOINT + "/" + resp["url"]) as image:
-                                name = resp["url"].split("/")[-1]
-                                images[name] = Image(
-                                    image=discord.File(io.BytesIO(await image.content.read()), name),
-                                    seed=resp["seed"],
-                                    config=resp["config"],
-                                )
+                            results.append(resp)
 
                         elif event == "step":
                             current_step += 1
                             if current_step == progress_bar.total or current_step % step_update_size == 0:
                                 await self.status_msg.update(content=progress_bar.update(current_step))
+
+                    for result in results:
+                        async with session.get(STABLEDIFFUSION_POST_ENDPOINT + "/" + result["url"]) as image:
+                            name = result["url"].split("/")[-1]
+                            images[name] = Image(
+                                image=discord.File(io.BytesIO(await image.content.read()), name),
+                                seed=result["seed"],
+                                config=result["config"],
+                            )
 
         except json.decoder.JSONDecodeError as e:
             raise GenerationFailure(f"This isn't JSON... [{e}]")
