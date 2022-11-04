@@ -226,7 +226,7 @@ class StableDiffusion(commands.Cog):
         new_prompt = []
         prompt_config = {}
         for piece in prompt.strip().split(" "):
-            if ":" in piece and piece.split(":")[0] in CONFIG_PROPERTIES:
+            if ":" in piece:  # and piece.split(":")[0] in CONFIG_PROPERTIES:
                 prompt_config[piece.split(":")[0]] = piece.split(":")[1]
             else:
                 new_prompt.append(piece)
