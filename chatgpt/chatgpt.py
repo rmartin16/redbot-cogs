@@ -2,11 +2,11 @@ import asyncio
 import json
 from pathlib import Path
 
+import aiohttp
 from redbot.core import commands
 
-from revChatGPT.revChatGPT import Chatbot
 
-CHATGPT_CONFIG_PATH = Path("/data/chatgpt.config")
+CHATGPT_POST_ENDPOINT = "http://10.16.16.16:5000/query"
 
 
 class StatusMessage:
@@ -25,27 +25,9 @@ class ChatGPT(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        loop = asyncio.get_event_loop()
-
-        self.chatbot_config = self.get_config()
-        self.chatbot = None
-
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete."""
         return
-
-    async def send_query(self, prompt) -> str:
-        loop = asyncio.get_event_loop()
-        if self.chatbot is None:
-            self.chatbot = await loop.run_in_executor(None, Chatbot, self.chatbot_config)
-        await loop.run_in_executor(None, self.chatbot.refresh_session, )
-        response = await loop.run_in_executor(None, self.chatbot.get_chat_response, (prompt, "text"))
-        return response['message']
-
-    def get_config(self) -> dict:
-        with open(CHATGPT_CONFIG_PATH, 'r') as f:
-            return json.load(f)
-
 
     @commands.max_concurrency(1, commands.BucketType.default)
     @commands.command()
@@ -53,8 +35,9 @@ class ChatGPT(commands.Cog):
     async def chatgpt(self, ctx: commands.Context, *, prompt: str):
         """Generate text through ChatGPT."""
 
-        # chat_msg = StatusMessage(ctx=ctx)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(CHATGPT_POST_ENDPOINT, json={"prompt": prompt}) as response:
+                response.raise_for_status()
+                chat_response = response.json().get("answer", "no response...")
 
-        response = await self.send_query(prompt)
-
-        await ctx.send(response)
+        await ctx.send(chat_response)
