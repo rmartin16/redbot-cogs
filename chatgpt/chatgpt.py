@@ -1,12 +1,11 @@
 import json
 from pathlib import Path
 
-import discord
 from redbot.core import commands
 
 from revChatGPT.revChatGPT import AsyncChatbot as Chatbot
 
-CHATGPT_CONFIG_PATH = Path("/config/data/chatgpt.config")
+CHATGPT_CONFIG_PATH = Path("/data/chatgpt.config")
 
 
 class StatusMessage:
