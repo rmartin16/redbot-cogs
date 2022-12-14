@@ -9,6 +9,8 @@ from redbot.core import commands
 CHATGPT_POST_ENDPOINT = "http://10.16.16.16:5000/query"
 
 
+class GenerationFailure(Exception): pass
+
 class StatusMessage:
     def __init__(self, ctx):
         self.ctx = ctx
@@ -34,10 +36,26 @@ class ChatGPT(commands.Cog):
     @commands.guild_only()
     async def chatgpt(self, ctx: commands.Context, *, prompt: str):
         """Generate text through ChatGPT."""
+        try:
+            async with ctx.typing():
+                await ctx.send(await self.query_chatgpt(prompt))
+        except Exception as e:
+            await ctx.send(f"ERROR: {e}")
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(CHATGPT_POST_ENDPOINT, json={"prompt": prompt}) as response:
-                response.raise_for_status()
-                chat_response = (await response.json()).get("answer", "no response...")
-
-        await ctx.send(chat_response)
+    async def query_chatgpt(self, prompt: str):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(CHATGPT_POST_ENDPOINT, json={"prompt": prompt}) as response:
+                    response.raise_for_status()
+                    json_response = await response.json()
+                    if "answer" in json_response:
+                        return json_response["answer"]
+                    return f"This is what i got back...: {json_response}"
+        except json.decoder.JSONDecodeError as e:
+            raise GenerationFailure(f"This isn't JSON... [{e}]")
+        except aiohttp.ClientResponseError as e:
+            raise GenerationFailure(f"Bad HTTP response... [{e}]")
+        except aiohttp.ClientConnectionError as e:
+            raise GenerationFailure(f"ClientConnectionError [{e}]")
+        except Exception as e:
+            raise GenerationFailure(f"Unknown error: {repr(e)}")
