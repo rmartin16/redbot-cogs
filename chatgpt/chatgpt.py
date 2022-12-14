@@ -70,7 +70,7 @@ class ChatGPT(commands.Cog):
     @commands.guild_only()
     async def chatgptreset(self, ctx: commands.Context):
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{CHATGPT_POST_ENDPOINT}/query") as response:
+            async with session.post(f"{CHATGPT_POST_ENDPOINT}/reset") as response:
                 if response.status != 200:
                     await ctx.send("Chat reset failed")
                 else:
