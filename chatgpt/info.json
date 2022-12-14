@@ -1,0 +1,9 @@
+{
+    "author": ["rmartin16"],
+    "install_msg": "chatgpt",
+    "short": "chatgpt",
+    "description": "chatgpt",
+    "tags": ["chatgpt"],
+    "permissions": [],
+    "end_user_data_statement": "This cog does not persistently store data or metadata about users."
+}
