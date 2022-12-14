@@ -36,7 +36,7 @@ class ChatGPT(commands.Cog):
 
     async def send_query(self, prompt) -> str:
         loop = asyncio.get_event_loop()
-        if self.chatbot is not None:
+        if self.chatbot is None:
             self.chatbot = await loop.run_in_executor(None, Chatbot, self.chatbot_config)
         await loop.run_in_executor(None, self.chatbot.refresh_session, )
         response = await loop.run_in_executor(None, self.chatbot.get_chat_response, (prompt, "text"))
