@@ -56,6 +56,8 @@ class ChatGPT(commands.Cog):
                     json_response = await response.json()
                     if "answer" in json_response:
                         return json_response["answer"]
+                    elif "error" in json_response:
+                        return json_response["error"]
                     return f"This is what i got back...: {json_response}"
         except json.decoder.JSONDecodeError as e:
             raise GenerationFailure(f"This isn't JSON... [{e}]")
