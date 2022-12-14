@@ -1,9 +1,10 @@
+import asyncio
 import json
 from pathlib import Path
 
 from redbot.core import commands
 
-from revChatGPT.revChatGPT import AsyncChatbot as Chatbot
+from revChatGPT.revChatGPT import Chatbot
 
 CHATGPT_CONFIG_PATH = Path("/data/chatgpt.config")
 
@@ -31,9 +32,10 @@ class ChatGPT(commands.Cog):
         """Nothing to delete."""
         return
 
-    async def handle_response(self, prompt) -> str:
-        self.chatbot.refresh_session()
-        response = await self.chatbot.get_chat_response(prompt, output="text")
+    async def send_query(self, prompt) -> str:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.chatbot.refresh_session, )
+        response = await loop.run_in_executor(None, self.chatbot.get_chat_response, (prompt, "text"))
         return response['message']
 
     def get_config(self) -> dict:
@@ -49,6 +51,6 @@ class ChatGPT(commands.Cog):
 
         # chat_msg = StatusMessage(ctx=ctx)
 
-        response = await self.handle_response(prompt)
+        response = await self.send_query(prompt)
 
         await ctx.send(response)
