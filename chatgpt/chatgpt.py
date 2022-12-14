@@ -38,6 +38,6 @@ class ChatGPT(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.post(CHATGPT_POST_ENDPOINT, json={"prompt": prompt}) as response:
                 response.raise_for_status()
-                chat_response = response.json().get("answer", "no response...")
+                chat_response = (await response.json()).get("answer", "no response...")
 
         await ctx.send(chat_response)
