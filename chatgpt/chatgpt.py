@@ -39,7 +39,7 @@ class ChatGPT(commands.Cog):
         try:
             async with ctx.typing():
                 response = await self.query_chatgpt(prompt)
-                if response > max_message_len:
+                if len(response) > max_message_len:
                     chunks = (response[i:i+max_message_len] for i in range(0, len(response), max_message_len))
                     for part in chunks:
                         await ctx.send(part)
