@@ -5,7 +5,5 @@
     "description": "chatgpt",
     "tags": ["chatgpt"],
     "permissions": [],
-    "end_user_data_statement": "This cog does not persistently store data or metadata about users.",
-    "REQUIREMENTS": ["revChatGPT"],
-    "requirements": ["revChatGPT"]
+    "end_user_data_statement": "This cog does not persistently store data or metadata about users."
 }
