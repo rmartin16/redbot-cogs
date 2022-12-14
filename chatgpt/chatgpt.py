@@ -25,8 +25,10 @@ class ChatGPT(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        loop = asyncio.get_event_loop()
+
         self.chatbot_config = self.get_config()
-        self.chatbot = Chatbot(self.chatbot_config, conversation_id=None)
+        self.chatbot = await loop.run_in_executor(None, Chatbot, self.chatbot_config)
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete."""
