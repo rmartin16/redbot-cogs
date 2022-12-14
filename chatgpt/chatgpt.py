@@ -1,15 +1,14 @@
-import asyncio
 import json
-from pathlib import Path
 
 import aiohttp
 from redbot.core import commands
 
 
-CHATGPT_POST_ENDPOINT = "http://10.16.16.16:5000/query"
+CHATGPT_POST_ENDPOINT = "http://10.16.16.16:5000"
 
 
-class GenerationFailure(Exception): pass
+class GenerationFailure(Exception):
+    pass
 
 class StatusMessage:
     def __init__(self, ctx):
@@ -36,16 +35,23 @@ class ChatGPT(commands.Cog):
     @commands.guild_only()
     async def chatgpt(self, ctx: commands.Context, *, prompt: str):
         """Generate text through ChatGPT."""
+        max_message_len = 1900
         try:
             async with ctx.typing():
-                await ctx.send(await self.query_chatgpt(prompt))
+                response = await self.query_chatgpt(prompt)
+                if response > max_message_len:
+                    chunks = (response[i:i+max_message_len] for i in range(0, len(response), max_message_len))
+                    for part in chunks:
+                        await ctx.send(part)
+                else:
+                    await ctx.send(response)
         except Exception as e:
             await ctx.send(f"ERROR: {e}")
 
     async def query_chatgpt(self, prompt: str):
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(CHATGPT_POST_ENDPOINT, json={"prompt": prompt}) as response:
+                async with session.post(f"{CHATGPT_POST_ENDPOINT}/query", json={"prompt": prompt}) as response:
                     response.raise_for_status()
                     json_response = await response.json()
                     if "answer" in json_response:
@@ -59,3 +65,13 @@ class ChatGPT(commands.Cog):
             raise GenerationFailure(f"ClientConnectionError [{e}]")
         except Exception as e:
             raise GenerationFailure(f"Unknown error: {repr(e)}")
+
+    @commands.command()
+    @commands.guild_only()
+    async def chatgptreset(self, ctx: commands.Context):
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{CHATGPT_POST_ENDPOINT}/query") as response:
+                if response.status != 200:
+                    await ctx.send("Chat reset failed")
+                else:
+                    await ctx.send("Chat reset successful")
