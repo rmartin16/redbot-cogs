@@ -86,8 +86,8 @@ class ChatGPT(commands.Cog):
         max_message_len = 1900
         try:
             async with ctx.typing():
-                async for data in self.query_chatgpt(prompt):
-                    await self.status_msg.update(data["message"])
+                async for response in self.query_chatgpt(prompt):
+                    await self.status_msg.update(response)
 
                 # response = await self.query_chatgpt(prompt)
                 # if len(response) > max_message_len:
