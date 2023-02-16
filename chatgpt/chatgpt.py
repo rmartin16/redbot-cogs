@@ -54,7 +54,6 @@ class StatusMessage:
     def __init__(self, ctx):
         self.ctx = ctx
         self.msg = None
-        self.chatbot = Chatbot(config=loads(open(CHATGPT_CONFIG_PATH).read()))
 
     async def create(self, content=""):
         self.msg = await self.ctx.send(content)
@@ -68,6 +67,8 @@ class ChatGPT(commands.Cog):
         self.bot = bot
         self.ctx = None
         self.status_msg: StatusMessage = None
+
+        self.chatbot = Chatbot(config=loads(open(CHATGPT_CONFIG_PATH).read()))
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete."""
