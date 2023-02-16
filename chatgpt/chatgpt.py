@@ -5,12 +5,14 @@ import aiohttp
 from pathlib import Path
 from json import loads
 from traceback import print_exc
+from time import time
 
 from redbot.core import commands
 from revChatGPT.V1 import Chatbot
 
 CHATGPT_POST_ENDPOINT = "http://10.16.16.16:5000"
 CHATGPT_CONFIG_PATH = Path("/data/chatgpt.config")
+DISCORD_UPDATE_FREQ = 2  # seconds
 
 
 class GenerationFailure(Exception):
@@ -86,9 +88,11 @@ class ChatGPT(commands.Cog):
         max_message_len = 1900
         try:
             async with ctx.typing():
+                next_update = time() + DISCORD_UPDATE_FREQ
                 async for response in self.query_chatgpt(prompt):
-                    if response:
+                    if response or time() > next_update:
                         await self.status_msg.update(response)
+                        next_update = time() + DISCORD_UPDATE_FREQ
 
                 # response = await self.query_chatgpt(prompt)
                 # if len(response) > max_message_len:
