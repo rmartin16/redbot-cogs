@@ -98,11 +98,11 @@ class ChatGPT(commands.Cog):
                         await self.status_msg.create("Starting new message...")
                         response_start = len(response)
                     # send latest message
-                    if response and time() > next_update:
+                    if response[response_start:] and time() > next_update:
                         await self.status_msg.update(response[response_start:])
                         next_update = time() + DISCORD_UPDATE_FREQ
                 # send the last response just in case the freq limiter prevented it
-                if response:
+                if response[response_start:]:
                     await self.status_msg.update(response[response_start:])
 
                 # response = await self.query_chatgpt(prompt)
