@@ -90,7 +90,7 @@ class ChatGPT(commands.Cog):
             async with ctx.typing():
                 next_update = time() + DISCORD_UPDATE_FREQ
                 async for response in self.query_chatgpt(prompt):
-                    if response or time() > next_update:
+                    if response and time() > next_update:
                         await self.status_msg.update(response)
                         next_update = time() + DISCORD_UPDATE_FREQ
 
