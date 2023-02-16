@@ -89,13 +89,21 @@ class ChatGPT(commands.Cog):
         try:
             async with ctx.typing():
                 response: str = ""
+                response_start = 0
                 next_update = time() + DISCORD_UPDATE_FREQ
                 async for response in self.query_chatgpt(prompt):
+                    # Limit length of any one message
+                    if len(response[response_start:]) > max_message_len:
+                        self.status_msg = StatusMessage(ctx=ctx)
+                        await self.status_msg.create("Starting new message...")
+                        response_start = len(response)
+                    # send latest message
                     if response and time() > next_update:
-                        await self.status_msg.update(response)
+                        await self.status_msg.update(response[response_start:])
                         next_update = time() + DISCORD_UPDATE_FREQ
+                # send the last response just in case the freq limiter prevented it
                 if response:
-                    await self.status_msg.update(response)
+                    await self.status_msg.update(response[response_start:])
 
                 # response = await self.query_chatgpt(prompt)
                 # if len(response) > max_message_len:
@@ -105,7 +113,6 @@ class ChatGPT(commands.Cog):
                 # else:
                 #     await ctx.send(response)
         except Exception as e:
-            await self.status_msg.msg.delete()
             await self.ctx.send(f"Something went wrong... :( [{e}]")
 
     async def query_chatgpt(self, prompt: str):
