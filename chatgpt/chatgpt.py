@@ -12,7 +12,7 @@ from revChatGPT.V1 import Chatbot
 
 CHATGPT_POST_ENDPOINT = "http://10.16.16.16:5000"
 CHATGPT_CONFIG_PATH = Path("/data/chatgpt.config")
-DISCORD_UPDATE_FREQ = 2  # seconds
+DISCORD_UPDATE_FREQ = 0.5  # seconds
 
 
 class GenerationFailure(Exception):
