@@ -10,7 +10,7 @@ from redbot.core import commands
 from revChatGPT.V1 import Chatbot
 
 CHATGPT_POST_ENDPOINT = "http://10.16.16.16:5000"
-CHATGPT_CONFIG_PATH = Path("/home/russell/.config/revChatGPT/chatgpt.config")
+CHATGPT_CONFIG_PATH = Path("/data/chatgpt.config")
 
 
 class GenerationFailure(Exception):
