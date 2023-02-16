@@ -22,7 +22,7 @@ class GenerationFailure(Exception):
 def async_wrap_iter(it):
     """Wrap blocking iterator into an asynchronous one"""
     loop = asyncio.get_event_loop()
-    q = asyncio.Queue(1)
+    q = asyncio.Queue()
     exception = None
     _END = object()
 
