@@ -61,7 +61,8 @@ class StatusMessage:
         self.msg = await self.ctx.send(content)
 
     async def update(self, content):
-        await self.msg.edit(content=content)
+        if content:
+            await self.msg.edit(content=content)
 
 
 class ChatGPT(commands.Cog):
@@ -88,30 +89,27 @@ class ChatGPT(commands.Cog):
         max_message_len = 1900
         try:
             async with ctx.typing():
-                response: str = ""
+                current_response: str = ""
                 response_start = 0
                 next_update = time() + DISCORD_UPDATE_FREQ
                 async for response in self.query_chatgpt(prompt):
+                    current_response = response[response_start:]
+
                     # Limit length of any one message
-                    if len(response[response_start:]) > max_message_len:
+                    if len(current_response) > max_message_len:
                         self.status_msg = StatusMessage(ctx=ctx)
                         await self.status_msg.create("Starting new message...")
                         response_start = len(response)
-                    # send latest message
-                    if response[response_start:] and time() > next_update:
-                        await self.status_msg.update(response[response_start:])
-                        next_update = time() + DISCORD_UPDATE_FREQ
-                # send the last response just in case the freq limiter prevented it
-                if response[response_start:]:
-                    await self.status_msg.update(response[response_start:])
 
-                # response = await self.query_chatgpt(prompt)
-                # if len(response) > max_message_len:
-                #     chunks = (response[i:i+max_message_len] for i in range(0, len(response), max_message_len))
-                #     for part in chunks:
-                #         await ctx.send(part)
-                # else:
-                #     await ctx.send(response)
+                    # send latest message
+                    if current_response and time() > next_update:
+                        await self.status_msg.update(current_response)
+                        next_update = time() + DISCORD_UPDATE_FREQ
+
+                # send the last response just in case the freq limiter prevented it
+                if current_response:
+                    await self.status_msg.update(current_response)
+
         except Exception as e:
             await self.ctx.send(f"Something went wrong... :( [{e}]")
 
@@ -121,16 +119,6 @@ class ChatGPT(commands.Cog):
             ait = async_wrap_iter(response)
             async for data in ait:
                 yield data["message"]
-
-            # async with aiohttp.ClientSession() as session:
-            #     async with session.post(f"{CHATGPT_POST_ENDPOINT}/query", json={"prompt": prompt}) as response:
-            #         response.raise_for_status()
-            #         json_response = await response.json()
-            #         if "answer" in json_response:
-            #             return json_response["answer"]
-            #         elif "error" in json_response:
-            #             return json_response["error"]
-            #         return f"This is what i got back...: {json_response}"
         except json.decoder.JSONDecodeError as e:
             raise GenerationFailure(f"This isn't JSON... [{e}]")
         except aiohttp.ClientResponseError as e:
