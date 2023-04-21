@@ -4,6 +4,7 @@ import threading
 import aiohttp
 from pathlib import Path
 from json import loads
+from requests import RequestException
 from traceback import print_exc
 from time import time
 
@@ -121,10 +122,8 @@ class ChatGPT(commands.Cog):
                 yield data["message"]
         except json.decoder.JSONDecodeError as e:
             raise GenerationFailure(f"This isn't JSON... [{e}]")
-        except aiohttp.ClientResponseError as e:
-            raise GenerationFailure(f"Bad HTTP response... [{e}]")
-        except aiohttp.ClientConnectionError as e:
-            raise GenerationFailure(f"ClientConnectionError [{e}]")
+        except RequestException as e:
+            raise GenerationFailure(f"RequestException [{e}]")
         except Exception as e:
             print_exc()
             raise GenerationFailure(f"ChatGPT ERROR {e.code}: {e.message} from {e.source} ({repr(e)})")
