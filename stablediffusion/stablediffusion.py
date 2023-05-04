@@ -295,3 +295,6 @@ class StableDiffusion(commands.Cog):
         async with aiohttp.ClientSession() as session:
             await session.get(f"{STABLEDIFFUSION_POST_ENDPOINT}/cancel")
 
+
+async def setup(bot):
+    await bot.add_cog(StableDiffusion(bot))
