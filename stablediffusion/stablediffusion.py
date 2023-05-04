@@ -164,7 +164,7 @@ class StableDiffusion(commands.Cog):
 
             form = []
             payload = {"embeds": [e.to_dict() for e in embeds]}
-            form.append({"name": "payload_json", "value": discord.utils.to_json(payload)})
+            form.append({"name": "payload_json", "value": discord.utils._to_json(payload)})
 
             for name, image in files_images_chunk.items():
                 form.append(
