@@ -332,3 +332,5 @@ class StableDiffusion(commands.Cog):
 
         async with aiohttp.ClientSession() as session:
             await session.get(f"{STABLEDIFFUSION_POST_ENDPOINT}/cancel")
+
+            self.api.interrupt()
