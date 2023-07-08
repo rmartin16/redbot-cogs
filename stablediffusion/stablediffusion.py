@@ -293,8 +293,10 @@ class StableDiffusion(commands.Cog):
                 image_bytes = io.BytesIO()
                 image.save(fp=image_bytes, format="png")
 
+                image_bytes.seek(0)
+
                 images[name] = Image(
-                    image=discord.File(io.BytesIO(image_bytes.getvalue()), name),
+                    image=discord.File(image_bytes, name),
                     seed=response.parameters["seed"],
                     config=response.parameters,
                 )
