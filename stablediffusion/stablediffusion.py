@@ -146,7 +146,8 @@ class StableDiffusion(commands.Cog):
                 gen_time = time() - start
                 await self.upload(images, request_config['prompt'], gen_time)
             except Exception as e:
-                await self.ctx.send(f"Something went wrong... :( [{e}]")
+                import traceback
+                await self.ctx.send(f"Something went wrong... :( [{e}]\n{traceback.format_exc()}")
             finally:
                 await self.status_msg.msg.delete()
 
@@ -286,10 +287,6 @@ class StableDiffusion(commands.Cog):
                     seed=response.parameters["seed"],
                     config=response.parameters,
                 )
-
-            import PIL.PngImagePlugin
-
-            img = PIL.PngImagePlugin.PngImageFile().to
 
             # async with aiohttp.ClientSession() as session:
             #     async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=request_config) as response:
