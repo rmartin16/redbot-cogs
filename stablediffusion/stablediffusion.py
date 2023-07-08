@@ -280,6 +280,7 @@ class StableDiffusion(commands.Cog):
             response = await self.api.txt2img(use_async=True, **request_config)
 
             for num, image in enumerate(response.images):
+                num = str(num)
                 images[num] = Image(
                     image=discord.File(io.BytesIO(base64.b64encode(image.tobytes())), num),
                     seed=response.parameters["seed"],
