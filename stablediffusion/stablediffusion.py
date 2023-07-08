@@ -279,7 +279,7 @@ class StableDiffusion(commands.Cog):
         """Request and retrieve generated images."""
         images = {}
         current_step = 0
-        step_update_size = 8  # step frequency to update status message
+        step_update_size = 5  # step frequency to update status message
         progress_bar = ProgressBar(total=100)
         await self.status_msg.update(content=progress_bar.update(current_step))
         await self.status_msg.add_cancel_reaction()
@@ -310,36 +310,6 @@ class StableDiffusion(commands.Cog):
                     seed=response.info["seed"],
                     config=response.parameters,
                 )
-
-            # async with aiohttp.ClientSession() as session:
-            #     async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=request_config) as response:
-            #         response.raise_for_status()
-            #
-            #         results = []
-            #         async for line in response.content:
-            #             resp = json.loads(line)
-            #             event = resp.get("event", "").lower()
-            #
-            #             if event.startswith("upscaling"):
-            #                 await self.status_msg.update(content="Upscaling images...")
-            #
-            #             elif event == "result":
-            #                 results.append(resp)
-            #
-            #             elif event == "step":
-            #                 current_step += 1
-            #                 if current_step == progress_bar.total or current_step % step_update_size == 0:
-            #                     await self.status_msg.update(content=progress_bar.update(current_step))
-            #
-            #         for result in results:
-            #             async with session.get(STABLEDIFFUSION_POST_ENDPOINT + "/" + result["url"]) as image:
-            #                 name = result["url"].split("/")[-1]
-            #                 images[name] = Image(
-            #                     image=discord.File(io.BytesIO(await image.content.read()), name),
-            #                     seed=result["seed"],
-            #                     config=result["config"],
-            #                 )
-
         except json.decoder.JSONDecodeError as e:
             raise GenerationFailure(f"This isn't JSON... [{e}]")
         except aiohttp.ClientResponseError as e:
