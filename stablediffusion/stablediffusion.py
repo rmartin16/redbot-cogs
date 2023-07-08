@@ -209,7 +209,7 @@ class StableDiffusion(commands.Cog):
             "firstphase_width": 0,
             "firstphase_height": 0,
             "hr_scale": 2,
-            "hr_upscaler": "",
+            "hr_upscaler": webuiapi.HiResUpscaler.Latent,
             "hr_second_pass_steps": 0,
             "hr_resize_x": 0,
             "hr_resize_y": 0,
@@ -223,7 +223,7 @@ class StableDiffusion(commands.Cog):
             "subseed_strength": 0,
             "seed_resize_from_h": -1,
             "seed_resize_from_w": -1,
-            "sampler_name": "",
+            "sampler_name": "Euler",
             "batch_size": num_of_images,
             "n_iter": 1,
             "steps": DEFAULT_REQUEST_STEPS,
@@ -244,7 +244,6 @@ class StableDiffusion(commands.Cog):
             "override_settings": {},
             "override_settings_restore_afterwards": True,
             "script_args": [],
-            "sampler_index": "Euler",
             "script_name": "",
             "send_images": True,
             "save_images": False,
@@ -273,6 +272,10 @@ class StableDiffusion(commands.Cog):
                 prompt_config[piece.split(":")[0]] = piece.split(":")[1]
             else:
                 new_prompt.append(piece)
+
+        if "styles" in prompt_config:
+            prompt_config["styles"] = [prompt_config["styles"].split(",")]
+
         return " ".join(new_prompt), prompt_config
 
     async def generate_images(self, request_config: dict) -> Dict[str, Image]:
