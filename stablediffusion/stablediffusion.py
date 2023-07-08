@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 import os
@@ -288,11 +289,8 @@ class StableDiffusion(commands.Cog):
                 image: PngImageFile
                 num = str(num)
 
-                image_bytes = io.BytesIO()
-                image.save(fp=image_bytes, format="png")
-
                 images[num] = Image(
-                    image=discord.File(image_bytes, f"{num}.png"),
+                    image=discord.File(io.BytesIO(base64.b64decode(image)), f"{num}.png"),
                     seed=response.parameters["seed"],
                     config=response.parameters,
                 )
