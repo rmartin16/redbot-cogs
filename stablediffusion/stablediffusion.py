@@ -1,4 +1,4 @@
-import base64
+import asyncio
 import io
 import json
 import os
@@ -287,11 +287,11 @@ class StableDiffusion(commands.Cog):
             response_task = self.api.txt2img(use_async=True, **request_config)
 
             while not response_task.done():
-                await self.status_msg.update(
-                    content=progress_bar.update(
-                        round(self.api.get_progress()["progress"] * 100)
-                    )
-                )
+                current_step = round(self.api.get_progress()["progress"] * 100)
+                if current_step == progress_bar.total or current_step % step_update_size == 0:
+                    await self.status_msg.update(content=progress_bar.update(current_step))
+                await asyncio.sleep(0.25)
+            await self.status_msg.update(content=progress_bar.update(100))
 
             response = response_task.result()
 
