@@ -52,9 +52,11 @@ class ProgressBar:
         self.completed_char = "#"
         self.remaining_char = "."
 
+        self.current = 0
         self.total = total
 
     def update(self, completed: int):
+        self.current = completed
         completed_count = int(self.bar_width * completed / self.total)
         bar_completed = self.completed_char * completed_count
         bar_remaining = self.remaining_char * (self.bar_width - completed_count)
@@ -288,7 +290,7 @@ class StableDiffusion(commands.Cog):
 
             while not response_task.done():
                 current_step = round(self.api.get_progress()["progress"] * 100)
-                if current_step == progress_bar.total or current_step % step_update_size == 0:
+                if current_step == progress_bar.total or current_step >= (progress_bar.current + step_update_size):
                     await self.status_msg.update(content=progress_bar.update(current_step))
                 await asyncio.sleep(0.5)
             await self.status_msg.update(content=progress_bar.update(100))
