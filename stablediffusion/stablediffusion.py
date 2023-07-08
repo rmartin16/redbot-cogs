@@ -289,11 +289,13 @@ class StableDiffusion(commands.Cog):
             while not response_task.done():
                 await self.status_msg.update(
                     content=progress_bar.update(
-                        self.api.get_progress()["progress"]
+                        round(self.api.get_progress()["progress"] * 100)
                     )
                 )
 
-            for num, image in enumerate(response_task.result().images):
+            response = response_task.result()
+
+            for num, image in enumerate(response.images):
                 image: PngImageFile
                 name = f"{num}.png"
 
