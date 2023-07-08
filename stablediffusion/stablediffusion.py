@@ -274,7 +274,7 @@ class StableDiffusion(commands.Cog):
                 new_prompt.append(piece)
 
         if "styles" in prompt_config:
-            prompt_config["styles"] = [prompt_config["styles"].split(",")]
+            prompt_config["styles"] = prompt_config["styles"].split(",")
 
         return " ".join(new_prompt), prompt_config
 
@@ -288,10 +288,6 @@ class StableDiffusion(commands.Cog):
         await self.status_msg.add_cancel_reaction()
         self.channels[str(self.ctx.channel.id)] = {"msg_id": self.status_msg.msg.id}
         try:
-
-            from pprint import pprint
-            pprint(request_config)
-
             response_task = self.api.txt2img(use_async=True, **request_config)
 
             while not response_task.done():
@@ -301,7 +297,7 @@ class StableDiffusion(commands.Cog):
                 await asyncio.sleep(0.5)
             await self.status_msg.update(content=progress_bar.update(100))
 
-            response = await response_task
+            response = response_task.result()
 
             for num, image in enumerate(response.images):
                 image: PngImageFile
