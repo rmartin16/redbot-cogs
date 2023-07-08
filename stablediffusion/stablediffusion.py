@@ -289,6 +289,9 @@ class StableDiffusion(commands.Cog):
         self.channels[str(self.ctx.channel.id)] = {"msg_id": self.status_msg.msg.id}
         try:
 
+            from pprint import pprint
+            pprint(request_config)
+
             response_task = self.api.txt2img(use_async=True, **request_config)
 
             while not response_task.done():
