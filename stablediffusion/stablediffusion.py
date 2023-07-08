@@ -330,7 +330,4 @@ class StableDiffusion(commands.Cog):
         if user.id == self.bot.user.id:
             return
 
-        async with aiohttp.ClientSession() as session:
-            await session.get(f"{STABLEDIFFUSION_POST_ENDPOINT}/cancel")
-
-            self.api.interrupt()
+        self.api.skip()
