@@ -284,9 +284,16 @@ class StableDiffusion(commands.Cog):
         self.channels[str(self.ctx.channel.id)] = {"msg_id": self.status_msg.msg.id}
         try:
 
-            response = await self.api.txt2img(use_async=True, **request_config)
+            response_task = self.api.txt2img(use_async=True, **request_config)
 
-            for num, image in enumerate(response.images):
+            while response_task.done():
+                await self.status_msg.update(
+                    content=progress_bar.update(
+                        self.api.get_progress()["progress"]
+                    )
+                )
+
+            for num, image in enumerate(response_task.result().images):
                 image: PngImageFile
                 name = f"{num}.png"
 
