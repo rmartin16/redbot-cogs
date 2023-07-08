@@ -288,13 +288,13 @@ class StableDiffusion(commands.Cog):
 
             for num, image in enumerate(response.images):
                 image: PngImageFile
-                num = str(num)
+                name = f"{num}.png"
 
                 image_bytes = io.BytesIO()
                 image.save(fp=image_bytes, format="png")
 
-                images[num] = Image(
-                    image=discord.File(image_bytes, f"{num}.png"),
+                images[name] = Image(
+                    image=discord.File(image_bytes, name),
                     seed=response.parameters["seed"],
                     config=response.parameters,
                 )
