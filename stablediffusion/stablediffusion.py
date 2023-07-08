@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 import os
@@ -8,6 +9,8 @@ from typing import Dict, Generator, Tuple, TypeVar
 
 import aiohttp
 import discord
+
+import webuiapi
 from discord.http import Route
 from redbot.core import commands
 
@@ -91,6 +94,7 @@ class StableDiffusion(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.api = webuiapi.WebUIApi(host="10.16.8.5")
         self.status_msg: StatusMessage = None
         self.ctx = None
         self.channels = {}
@@ -191,24 +195,53 @@ class StableDiffusion(commands.Cog):
         prompt, prompt_config = self.parse_config_from_prompt(prompt)
 
         request_config = {
+            "enable_hr": False,
+            "denoising_strength": 0,
+            "firstphase_width": 0,
+            "firstphase_height": 0,
+            "hr_scale": 2,
+            "hr_upscaler": "",
+            "hr_second_pass_steps": 0,
+            "hr_resize_x": 0,
+            "hr_resize_y": 0,
+            # "hr_sampler_name": "",
+            # "hr_prompt": "",
+            # "hr_negative_prompt": "",
             "prompt": prompt,
-            "iterations": str(num_of_images),
-            "steps": str(DEFAULT_REQUEST_STEPS),
-            "cfg_scale": "7.5",
-            "sampler_name": "k_lms",
-            "width": "512",
-            "height": "512",
-            "seed": "-1",
-            "initimg": None,
-            "strength": "0.9",
-            "fit": "on",
-            "gfpgan_strength": "0.8",
-            "upscale_level": "2",
-            "upscale_strength": "0.75",
-            "variation_amount": "0",
-            "with_variations": "",
-            "facetool_strength": "0.8",
+            "styles": [],
+            "seed": -1,
+            "subseed": -1,
+            "subseed_strength": 0,
+            "seed_resize_from_h": -1,
+            "seed_resize_from_w": -1,
+            "sampler_name": "",
+            "batch_size": num_of_images,
+            "n_iter": 1,
+            "steps": DEFAULT_REQUEST_STEPS,
+            "cfg_scale": 7,
+            "width": 512,
+            "height": 512,
+            "restore_faces": True,
+            "tiling": False,
+            "do_not_save_samples": False,
+            "do_not_save_grid": False,
+            "negative_prompt": "",
+            "eta": 0,
+            # "s_min_uncond": 0,
+            "s_churn": 0,
+            "s_tmax": 0,
+            "s_tmin": 0,
+            "s_noise": 1,
+            "override_settings": {},
+            "override_settings_restore_afterwards": True,
+            "script_args": [],
+            "sampler_index": "Euler",
+            "script_name": "",
+            "send_images": True,
+            "save_images": False,
+            "alwayson_scripts": {}
         }
+
         request_config.update(prompt_config)
 
         return request_config
@@ -238,39 +271,53 @@ class StableDiffusion(commands.Cog):
         images = {}
         current_step = 0
         step_update_size = 8  # step frequency to update status message
-        progress_bar = ProgressBar(total=int(request_config["iterations"]) * int(request_config["steps"]))
+        progress_bar = ProgressBar(total=100)
         await self.status_msg.update(content=progress_bar.update(current_step))
         await self.status_msg.add_cancel_reaction()
         self.channels[str(self.ctx.channel.id)] = {"msg_id": self.status_msg.msg.id}
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=request_config) as response:
-                    response.raise_for_status()
 
-                    results = []
-                    async for line in response.content:
-                        resp = json.loads(line)
-                        event = resp.get("event", "").lower()
+            response = await self.api.txt2img(use_async=True, **request_config)
 
-                        if event.startswith("upscaling"):
-                            await self.status_msg.update(content="Upscaling images...")
+            for num, image in enumerate(response.images):
+                images[num] = Image(
+                    image=discord.File(io.BytesIO(base64.b64encode(image.tobytes()), num)),
+                    seed=response.parameters["seed"],
+                    config=response.parameters,
+                )
 
-                        elif event == "result":
-                            results.append(resp)
+            import PIL.PngImagePlugin
 
-                        elif event == "step":
-                            current_step += 1
-                            if current_step == progress_bar.total or current_step % step_update_size == 0:
-                                await self.status_msg.update(content=progress_bar.update(current_step))
+            img = PIL.PngImagePlugin.PngImageFile().to
 
-                    for result in results:
-                        async with session.get(STABLEDIFFUSION_POST_ENDPOINT + "/" + result["url"]) as image:
-                            name = result["url"].split("/")[-1]
-                            images[name] = Image(
-                                image=discord.File(io.BytesIO(await image.content.read()), name),
-                                seed=result["seed"],
-                                config=result["config"],
-                            )
+            # async with aiohttp.ClientSession() as session:
+            #     async with session.post(STABLEDIFFUSION_POST_ENDPOINT, json=request_config) as response:
+            #         response.raise_for_status()
+            #
+            #         results = []
+            #         async for line in response.content:
+            #             resp = json.loads(line)
+            #             event = resp.get("event", "").lower()
+            #
+            #             if event.startswith("upscaling"):
+            #                 await self.status_msg.update(content="Upscaling images...")
+            #
+            #             elif event == "result":
+            #                 results.append(resp)
+            #
+            #             elif event == "step":
+            #                 current_step += 1
+            #                 if current_step == progress_bar.total or current_step % step_update_size == 0:
+            #                     await self.status_msg.update(content=progress_bar.update(current_step))
+            #
+            #         for result in results:
+            #             async with session.get(STABLEDIFFUSION_POST_ENDPOINT + "/" + result["url"]) as image:
+            #                 name = result["url"].split("/")[-1]
+            #                 images[name] = Image(
+            #                     image=discord.File(io.BytesIO(await image.content.read()), name),
+            #                     seed=result["seed"],
+            #                     config=result["config"],
+            #                 )
 
         except json.decoder.JSONDecodeError as e:
             raise GenerationFailure(f"This isn't JSON... [{e}]")
