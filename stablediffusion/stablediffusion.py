@@ -149,7 +149,8 @@ class StableDiffusion(commands.Cog):
             except Exception as e:
                 import traceback
                 await self.ctx.send(
-                    f"Something went wrong... :( [{e}]\n"
+                    "Something went wrong... :(\n"
+                    f"`{e}`"
                     f"```"
                     f"{traceback.format_exc()}"
                     f"```")
@@ -293,7 +294,7 @@ class StableDiffusion(commands.Cog):
                 image.save(fp=image_bytes, format="png")
 
                 images[num] = Image(
-                    image=discord.File(image_bytes.getvalue(), f"{num}.png"),
+                    image=discord.File(image_bytes, f"{num}.png"),
                     seed=response.parameters["seed"],
                     config=response.parameters,
                 )
