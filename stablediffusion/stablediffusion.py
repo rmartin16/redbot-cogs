@@ -152,9 +152,9 @@ class StableDiffusion(commands.Cog):
                 import traceback
                 await self.ctx.send(
                     "Something went wrong... :(\n"
-                    f"`{e}`"
-                    f"```"
-                    f"{traceback.format_exc()}"
+                    f"`{e}`\n"
+                    f"```\n"
+                    f"{traceback.format_exc()}\n"
                     f"```")
             finally:
                 await self.status_msg.msg.delete()
@@ -298,7 +298,7 @@ class StableDiffusion(commands.Cog):
                 await asyncio.sleep(0.5)
             await self.status_msg.update(content=progress_bar.update(100))
 
-            response = response_task.result()
+            response = await response_task
 
             for num, image in enumerate(response.images):
                 image: PngImageFile
