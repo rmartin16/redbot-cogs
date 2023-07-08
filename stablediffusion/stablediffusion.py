@@ -147,7 +147,11 @@ class StableDiffusion(commands.Cog):
                 await self.upload(images, request_config['prompt'], gen_time)
             except Exception as e:
                 import traceback
-                await self.ctx.send(f"Something went wrong... :( [{e}]\n{traceback.format_exc()}")
+                await self.ctx.send(
+                    f"Something went wrong... :( [{e}]\n"
+                    f"```"
+                    f"{traceback.format_exc()}"
+                    f"```")
             finally:
                 await self.status_msg.msg.delete()
 
@@ -285,7 +289,7 @@ class StableDiffusion(commands.Cog):
                 num = str(num)
 
                 image_bytes = io.BytesIO()
-                image.save(fp=image_bytes)
+                image.save(fp=image_bytes, format="png")
 
                 images[num] = Image(
                     image=discord.File(image_bytes, f"{num}.png"),
