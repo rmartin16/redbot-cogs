@@ -1,4 +1,3 @@
-import base64
 import io
 import json
 import os
@@ -11,6 +10,7 @@ import aiohttp
 import discord
 
 import webuiapi
+from PIL.PngImagePlugin import PngImageFile
 from discord.http import Route
 from redbot.core import commands
 
@@ -281,9 +281,14 @@ class StableDiffusion(commands.Cog):
             response = await self.api.txt2img(use_async=True, **request_config)
 
             for num, image in enumerate(response.images):
+                image: PngImageFile
                 num = str(num)
+
+                image_bytes = io.BytesIO()
+                image.save(fp=image_bytes)
+
                 images[num] = Image(
-                    image=discord.File(io.BytesIO(image.tobytes()), f"{num}.png"),
+                    image=discord.File(image_bytes, f"{num}.png"),
                     seed=response.parameters["seed"],
                     config=response.parameters,
                 )
