@@ -281,7 +281,7 @@ class StableDiffusion(commands.Cog):
 
             for num, image in enumerate(response.images):
                 images[num] = Image(
-                    image=discord.File(io.BytesIO(base64.b64encode(image.tobytes()), num)),
+                    image=discord.File(io.BytesIO(base64.b64encode(image.tobytes())), num),
                     seed=response.parameters["seed"],
                     config=response.parameters,
                 )
