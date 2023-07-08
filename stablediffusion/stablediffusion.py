@@ -286,7 +286,7 @@ class StableDiffusion(commands.Cog):
 
             response_task = self.api.txt2img(use_async=True, **request_config)
 
-            while response_task.done():
+            while not response_task.done():
                 await self.status_msg.update(
                     content=progress_bar.update(
                         self.api.get_progress()["progress"]
