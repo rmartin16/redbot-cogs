@@ -55,7 +55,7 @@ class ProgressBar:
         self.current = 0
         self.total = total
 
-    def update(self, completed: int, seconds_left: float = 0):
+    def update(self, completed: int, seconds_remaining: float = 0):
         self.current = completed
 
         completed_count = int(self.bar_width * completed / self.total)
@@ -63,7 +63,7 @@ class ProgressBar:
         bar_remaining = self.remaining_char * (self.bar_width - completed_count)
         percent_done = int(completed_count * (100 / self.bar_width))
 
-        eta = "" if seconds_left < 0.1 else f"{round(seconds_left, 1)}s left"
+        eta = "" if seconds_remaining < 0.1 else f"ETA: {round(seconds_remaining)}s"
 
         return f"`{bar_completed}{bar_remaining} {percent_done}% {eta}`"
 
@@ -232,8 +232,8 @@ class StableDiffusion(commands.Cog):
             "n_iter": 1,
             "steps": DEFAULT_REQUEST_STEPS,
             "cfg_scale": 7,
-            "width": 512,
-            "height": 512,
+            "width": 768,
+            "height": 768,
             "restore_faces": True,
             "tiling": False,
             "do_not_save_samples": False,
