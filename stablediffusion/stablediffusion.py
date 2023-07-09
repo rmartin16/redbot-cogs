@@ -55,13 +55,17 @@ class ProgressBar:
         self.current = 0
         self.total = total
 
-    def update(self, completed: int):
+    def update(self, completed: int, seconds_left: float = 0):
         self.current = completed
+
         completed_count = int(self.bar_width * completed / self.total)
         bar_completed = self.completed_char * completed_count
         bar_remaining = self.remaining_char * (self.bar_width - completed_count)
         percent_done = int(completed_count * (100 / self.bar_width))
-        return f"`{bar_completed}{bar_remaining} {percent_done}%`"
+
+        eta = "" if seconds_left < 0.1 else f"(eta {round(seconds_left, 1)}s)"
+
+        return f"`{bar_completed}{bar_remaining} {percent_done}% {eta}`"
 
 
 class Image:
@@ -291,9 +295,11 @@ class StableDiffusion(commands.Cog):
             response_task = self.api.txt2img(use_async=True, **request_config)
 
             while not response_task.done():
-                current_step = round(self.api.get_progress()["progress"] * 100)
+                current_progress = self.api.get_progress()
+                current_step = round(current_progress["progress"] * 100)
+                eta = current_progress["eta_relative"]
                 if current_step == progress_bar.total or current_step >= (progress_bar.current + step_update_size):
-                    await self.status_msg.update(content=progress_bar.update(current_step))
+                    await self.status_msg.update(content=progress_bar.update(current_step, eta))
                 await asyncio.sleep(0.5)
             await self.status_msg.update(content=progress_bar.update(100))
 
