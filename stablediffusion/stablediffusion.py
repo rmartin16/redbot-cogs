@@ -63,7 +63,7 @@ class ProgressBar:
         bar_remaining = self.remaining_char * (self.bar_width - completed_count)
         percent_done = int(completed_count * (100 / self.bar_width))
 
-        eta = "" if seconds_left < 0.1 else f"(eta {round(seconds_left, 1)}s)"
+        eta = "" if seconds_left < 0.1 else f"{round(seconds_left, 1)}s left"
 
         return f"`{bar_completed}{bar_remaining} {percent_done}% {eta}`"
 
