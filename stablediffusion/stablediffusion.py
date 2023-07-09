@@ -48,7 +48,7 @@ def chunks(data: Dict[T, U], chunk_size: int) -> Generator[Dict[T, U], None, Non
 
 class ProgressBar:
     def __init__(self, total: int):
-        self.bar_width = 30
+        self.bar_width = 40
         self.completed_char = "#"
         self.remaining_char = "."
 
