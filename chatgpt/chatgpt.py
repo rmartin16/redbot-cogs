@@ -1,11 +1,10 @@
 import json
 import asyncio
 import threading
-import aiohttp
 from pathlib import Path
 from json import loads
 from requests import RequestException
-from traceback import print_exc
+from traceback import format_exc
 from time import time
 
 from redbot.core import commands
@@ -123,7 +122,7 @@ class ChatGPT(commands.Cog):
         except RequestException as e:
             raise GenerationFailure(f"RequestException [{e}]")
         except Exception as e:
-            raise GenerationFailure(f"ChatGPT ERROR {repr(e)}\n{print_exc()}")
+            raise GenerationFailure(f"ChatGPT ERROR {repr(e)}\n{format_exc()}")
             # raise GenerationFailure(f"Unknown error: {repr(e)}")
 
     @commands.command()
