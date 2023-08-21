@@ -124,7 +124,7 @@ class ChatGPT(commands.Cog):
             raise GenerationFailure(f"RequestException [{e}]")
         except Exception as e:
             print_exc()
-            raise GenerationFailure(f"ChatGPT ERROR {repr(e)}")
+            raise GenerationFailure(f"ChatGPT ERROR {repr(e)}\n{print_exc()}")
             # raise GenerationFailure(f"Unknown error: {repr(e)}")
 
     @commands.command()
