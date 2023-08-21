@@ -116,10 +116,8 @@ class ChatGPT(commands.Cog):
 
     async def query_chatgpt(self, prompt: str):
         try:
-            response = self.chatbot.ask(prompt=prompt)
-            ait = async_wrap_iter(response)
-            async for data in ait:
-                yield data["message"]
+            async for data in async_wrap_iter(self.chatbot.ask(prompt=prompt)):
+                yield data.get("message", "")
         except json.decoder.JSONDecodeError as e:
             raise GenerationFailure(f"This isn't JSON... [{e}]")
         except RequestException as e:
