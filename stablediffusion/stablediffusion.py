@@ -14,7 +14,12 @@ from discord.http import Route
 from redbot.core import commands
 
 from .comfyui_api import ComfyUIClient, GenerationCancelled, GenerationFailure
-from .workflow_template import DEFAULT_NEGATIVE_PROMPT, DEFAULT_WORKFLOW, NODE_CONFIG_MAP
+from .workflow_template import (
+    DEFAULT_NEGATIVE_PROMPT,
+    DEFAULT_WORKFLOW,
+    NODE_CONFIG_MAP,
+    REFINER_SWITCH_RATIO,
+)
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -50,23 +55,50 @@ def build_workflow(prompt: str, negative_prompt: str, num_of_images: int, overri
     instead of failing the whole generation.
     """
     workflow = copy.deepcopy(DEFAULT_WORKFLOW)
+    # Prompt/negative text needs encoding for both the base (6/7) and refiner (13/14)
+    # stages, since the refiner has its own CLIP text encoder.
     workflow["6"]["inputs"]["text"] = prompt
-    workflow["7"]["inputs"]["text"] = negative_prompt or DEFAULT_NEGATIVE_PROMPT
+    workflow["13"]["inputs"]["text"] = prompt
+    negative_prompt = negative_prompt or DEFAULT_NEGATIVE_PROMPT
+    workflow["7"]["inputs"]["text"] = negative_prompt
+    workflow["14"]["inputs"]["text"] = negative_prompt
     workflow["5"]["inputs"]["batch_size"] = num_of_images
-    # ComfyUI has no A1111-style "-1 means randomize" sentinel; roll our own seed.
-    workflow["3"]["inputs"]["seed"] = randint(0, 2**32 - 1)
+    # ComfyUI has no A1111-style "-1 means randomize" sentinel; roll our own seed,
+    # shared by both samplers so the refiner continues the same noise.
+    seed = randint(0, 2**32 - 1)
+    workflow["3"]["inputs"]["noise_seed"] = seed
+    workflow["12"]["inputs"]["noise_seed"] = seed
 
+    overrides = dict(overrides)
     warnings = []
+
+    # "steps" is special: it's the *total* step budget split between base and
+    # refiner, so it has to recompute the base/refiner handoff point rather than
+    # just being copied onto a single node input.
+    raw_steps = overrides.pop("steps", None)
+    if raw_steps is not None:
+        try:
+            total_steps = int(raw_steps)
+            switch_step = round(total_steps * REFINER_SWITCH_RATIO)
+            workflow["3"]["inputs"]["steps"] = total_steps
+            workflow["3"]["inputs"]["end_at_step"] = switch_step
+            workflow["12"]["inputs"]["steps"] = total_steps
+            workflow["12"]["inputs"]["start_at_step"] = switch_step
+            workflow["12"]["inputs"]["end_at_step"] = total_steps
+        except (ValueError, TypeError):
+            warnings.append(f"ignored bad override: `steps:{raw_steps}`")
+
     for key, value in overrides.items():
         mapping = NODE_CONFIG_MAP.get(key)
         if mapping is None:
             warnings.append(f"unknown config key ignored: `{key}`")
             continue
-        node_id, input_key, caster = mapping
-        try:
-            workflow[node_id]["inputs"][input_key] = caster(value)
-        except (ValueError, TypeError):
-            warnings.append(f"ignored bad override: `{key}:{value}`")
+        for node_id, input_key, caster in mapping:
+            try:
+                workflow[node_id]["inputs"][input_key] = caster(value)
+            except (ValueError, TypeError):
+                warnings.append(f"ignored bad override: `{key}:{value}`")
+                break
 
     return workflow, warnings
 
@@ -281,7 +313,7 @@ class StableDiffusion(commands.Cog):
             )
             await self.status_msg.update(content=progress_bar.update(100))
 
-            base_seed = workflow["3"]["inputs"]["seed"]
+            base_seed = workflow["3"]["inputs"]["noise_seed"]
             image_bytes_list = await self.api.fetch_output_images(history_entry)
             for num, img_bytes in enumerate(image_bytes_list):
                 name = f"{num}.png"
