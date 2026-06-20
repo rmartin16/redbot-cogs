@@ -1,13 +1,18 @@
 from typing import Callable, Dict, Tuple
 
-# SDXL API-format workflow. Node IDs match /home/russell/comfy/sdxl_api_workflow.json:
-# 3 KSampler, 4 CheckpointLoaderSimple, 5 EmptyLatentImage, 6/7 CLIPTextEncode pos/neg,
-# 8 VAEDecode, 9 SaveImage, 10 VAELoader.
+# SDXL API-format workflow, using Juggernaut XL v9 (RunDiffusionPhoto_v2) in place of
+# vanilla sd_xl_base_1.0 for noticeably better general-purpose output quality.
+# Settings (sampler/scheduler/cfg/steps) follow that checkpoint's documented
+# recommendations: https://huggingface.co/RunDiffusion/Juggernaut-XL-v9
+# Node IDs: 3 KSampler, 4 CheckpointLoaderSimple, 5 EmptyLatentImage,
+# 6/7 CLIPTextEncode pos/neg, 8 VAEDecode, 9 SaveImage.
+# No separate VAELoader: Juggernaut XL has its VAE baked in (per its docs), so
+# VAEDecode pulls straight from the checkpoint loader's VAE output.
 DEFAULT_WORKFLOW: dict = {
     "3": {
         "class_type": "KSampler",
         "inputs": {
-            "cfg": 7,
+            "cfg": 5,
             "denoise": 1,
             "latent_image": ["5", 0],
             "model": ["4", 0],
@@ -16,12 +21,12 @@ DEFAULT_WORKFLOW: dict = {
             "sampler_name": "dpmpp_2m",
             "scheduler": "karras",
             "seed": 0,
-            "steps": 25,
+            "steps": 32,
         },
     },
     "4": {
         "class_type": "CheckpointLoaderSimple",
-        "inputs": {"ckpt_name": "sd_xl_base_1.0.safetensors"},
+        "inputs": {"ckpt_name": "Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors"},
     },
     "5": {
         "class_type": "EmptyLatentImage",
@@ -33,24 +38,21 @@ DEFAULT_WORKFLOW: dict = {
     },
     "7": {
         "class_type": "CLIPTextEncode",
-        "inputs": {"clip": ["4", 1], "text": "worst quality, low quality, blurry"},
+        "inputs": {"clip": ["4", 1], "text": ""},
     },
     "8": {
         "class_type": "VAEDecode",
-        "inputs": {"samples": ["3", 0], "vae": ["10", 0]},
+        "inputs": {"samples": ["3", 0], "vae": ["4", 2]},
     },
     "9": {
         "class_type": "SaveImage",
         "inputs": {"filename_prefix": "ComfyUI", "images": ["8", 0]},
     },
-    "10": {
-        "class_type": "VAELoader",
-        "inputs": {"vae_name": "sdxl_vae.safetensors"},
-    },
 }
 
-DEFAULT_NEGATIVE_PROMPT = "worst quality, low quality, blurry"
-DEFAULT_STEPS = 25
+# Juggernaut's own docs: heavy default negatives often hurt more than they help,
+# so start empty and let users opt in via a negative_prompt: override.
+DEFAULT_NEGATIVE_PROMPT = ""
 
 # Maps a "key:value" prompt-override token (A1111-style inline config) to where it
 # lands in the node graph: (node_id, input_key, type_caster).
