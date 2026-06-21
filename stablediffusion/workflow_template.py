@@ -14,11 +14,19 @@ from typing import Callable, Dict, List, Tuple
 #   12 KSamplerAdvanced (refiner)
 #   13 CLIPTextEncodeSDXLRefiner (refiner positive)
 #   14 CLIPTextEncodeSDXLRefiner (refiner negative)
+#   15 UpscaleModelLoader (4x-UltraSharp)
+#   16 ImageUpscaleWithModel        17 ImageScaleBy
 #
 # The base sampler runs steps 0..SWITCH, then hands its (still-noisy) latent to the
 # refiner sampler for SWITCH..TOTAL — the classic SDXL base+refiner split, not extra
 # steps tacked on top, so total step count (and runtime) stays close to base-only.
 REFINER_SWITCH_RATIO = 0.8  # fraction of total steps done by the base model
+
+# 4x-UltraSharp is a fixed-4x ESRGAN model; UPSCALE_NET_FACTOR is the actual net
+# size multiple we want after re-downscaling, so output stays a sane Discord-sized
+# image instead of a literal 4x blow-up of whatever width/height was requested.
+UPSCALE_NET_FACTOR = 2.0
+_UPSCALE_RESCALE_BY = UPSCALE_NET_FACTOR / 4.0
 
 _TOTAL_STEPS = 32
 _SWITCH_STEP = round(_TOTAL_STEPS * REFINER_SWITCH_RATIO)
@@ -64,7 +72,7 @@ DEFAULT_WORKFLOW: dict = {
     },
     "9": {
         "class_type": "SaveImage",
-        "inputs": {"filename_prefix": "ComfyUI", "images": ["8", 0]},
+        "inputs": {"filename_prefix": "ComfyUI", "images": ["17", 0]},
     },
     "11": {
         "class_type": "CheckpointLoaderSimple",
@@ -106,6 +114,22 @@ DEFAULT_WORKFLOW: dict = {
             "width": 1024,
             "height": 1024,
             "text": "",
+        },
+    },
+    "15": {
+        "class_type": "UpscaleModelLoader",
+        "inputs": {"model_name": "4x-UltraSharp.pth"},
+    },
+    "16": {
+        "class_type": "ImageUpscaleWithModel",
+        "inputs": {"upscale_model": ["15", 0], "image": ["8", 0]},
+    },
+    "17": {
+        "class_type": "ImageScaleBy",
+        "inputs": {
+            "image": ["16", 0],
+            "upscale_method": "lanczos",
+            "scale_by": _UPSCALE_RESCALE_BY,
         },
     },
 }
